@@ -1,4 +1,5 @@
 import { basename, resolve } from 'node:path'
+import { warn } from '../output/logger'
 import { fail, ok } from '../output/result'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
@@ -63,7 +64,7 @@ export async function runInspectHtml(
         const parsed = new URL(url)
         return parsed.protocol === 'http:' || parsed.protocol === 'https:'
       } catch {
-        console.error(`[doc2api] Warning: Skipping invalid URL: ${url}`)
+        warn(`Skipping invalid URL: ${url}`)
         return false
       }
     })

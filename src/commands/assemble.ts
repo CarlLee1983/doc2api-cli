@@ -54,30 +54,34 @@ export async function runAssemble(
   return ok({ spec, endpointCount: input.endpoints.length, pathCount })
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 function validateAssembleInput(data: unknown): string | null {
-  if (typeof data !== 'object' || data === null) {
+  if (!isRecord(data)) {
     return 'Input must be a JSON object'
   }
 
-  const obj = data as Record<string, unknown>
-
-  if (!obj.info || typeof obj.info !== 'object') {
+  if (!isRecord(data.info)) {
     return 'Input must contain an "info" object'
   }
 
-  const info = obj.info as Record<string, unknown>
-  if (typeof info.title !== 'string' || !info.title) {
+  if (typeof data.info.title !== 'string' || !data.info.title) {
     return 'Input info must contain a non-empty "title" string'
   }
-  if (typeof info.version !== 'string' || !info.version) {
+  if (typeof data.info.version !== 'string' || !data.info.version) {
     return 'Input info must contain a non-empty "version" string'
   }
 
-  if (!Array.isArray(obj.endpoints) || obj.endpoints.length === 0) {
+  if (!Array.isArray(data.endpoints) || data.endpoints.length === 0) {
     return 'Input must contain a non-empty "endpoints" array'
   }
 
-  for (const [i, ep] of (obj.endpoints as Record<string, unknown>[]).entries()) {
+  for (const [i, ep] of (data.endpoints as unknown[]).entries()) {
+    if (!isRecord(ep)) {
+      return `Endpoint [${i}] must be an object`
+    }
     if (typeof ep.path !== 'string' || !ep.path) {
       return `Endpoint [${i}] missing "path"`
     }

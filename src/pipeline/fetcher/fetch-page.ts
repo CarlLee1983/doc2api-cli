@@ -1,3 +1,4 @@
+import { warn } from '../../output/logger'
 import { ok } from '../../output/result'
 import type { Result } from '../../types/result'
 import { checkPlaywright, fetchWithBrowser } from './browser-fetcher'
@@ -27,9 +28,7 @@ export async function fetchPage(
   if (detectSpa(result.data.html)) {
     const hasPw = await checkPlaywright()
     if (!hasPw) {
-      console.error(
-        `[doc2api] Warning: SPA detected but Playwright not installed, using static HTML for ${url}`,
-      )
+      warn(`SPA detected but Playwright not installed, using static HTML for ${url}`)
       return ok({ html: result.data.html, url: result.data.url })
     }
     return fetchWithBrowser(url, fetchOpts)

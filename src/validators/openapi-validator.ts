@@ -13,7 +13,10 @@ export async function validateSpec(spec: unknown): Promise<Result<ValidationResu
     const specDoc = structuredClone(spec) as Parameters<typeof validate>[0]
     const result = await validate(specDoc)
     if (!result.valid) {
-      const errors = result.errors?.map((e: { message: string }) => e.message) ?? []
+      const rawErrors = Array.isArray(result.errors) ? result.errors : []
+      const errors = rawErrors.map((e: unknown) =>
+        typeof e === 'object' && e !== null && 'message' in e ? String(e.message) : String(e),
+      )
       return ok({ valid: false, errors, warnings: [] })
     }
     return ok({ valid: true, errors: [], warnings: [] })

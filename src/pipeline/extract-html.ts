@@ -1,3 +1,4 @@
+import { warn } from '../output/logger'
 import { fail, ok } from '../output/result'
 import type { Result } from '../types/result'
 import type { ExtractResult, RawPage } from './extract'
@@ -62,7 +63,7 @@ export async function extractHtml(options: HtmlExtractOptions): Promise<Result<E
     for (const url of urls) {
       const fetchResult = await fetchPage(url, { forceBrowser, allowPrivate })
       if (!fetchResult.ok) {
-        console.error(`[doc2api] Warning: failed to fetch ${url}: ${fetchResult.error.message}`)
+        warn(`failed to fetch ${url}: ${fetchResult.error.message}`)
         continue
       }
 
