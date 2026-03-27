@@ -3,6 +3,7 @@ import { parseArgs } from 'node:util'
 import { resolve } from 'node:path'
 import { validateFilePath, validatePages } from './bridge/pdfplumber'
 import { runInspect } from './commands/inspect'
+import { runInspectHtml } from './commands/inspect-html'
 import { runAssemble } from './commands/assemble'
 import { runValidate } from './commands/validate'
 import { runDoctor } from './commands/doctor'
@@ -18,6 +19,10 @@ const { positionals, values } = parseArgs({
     stdin: { type: 'boolean', default: false },
     format: { type: 'string', default: 'yaml' },
     outdir: { type: 'string' },
+    crawl: { type: 'boolean', default: false },
+    'max-depth': { type: 'string' },
+    'max-pages': { type: 'string' },
+    browser: { type: 'boolean', default: false },
   },
 })
 
@@ -44,35 +49,53 @@ Flags:
   }
 
   if (command === 'inspect') {
-    const filePath = positionals[1]
-    if (!filePath) {
-      console.error('Error: doc2api inspect requires a file path')
+    const source = positionals[1]
+    if (!source) {
+      console.error('Error: doc2api inspect requires a source (file path or URL)')
       process.exit(3)
     }
 
-    const pathError = validateFilePath(filePath)
-    if (pathError) {
-      console.error(`Error: ${pathError}`)
-      process.exit(3)
-    }
+    const isUrl = source.startsWith('http://') || source.startsWith('https://')
+    const isUrlList = !isUrl && source.endsWith('.txt')
+    const isPdf = !isUrl && !isUrlList
 
-    const pagesValue = values.pages
-    if (pagesValue) {
-      const pagesError = validatePages(pagesValue)
-      if (pagesError) {
-        console.error(`Error: ${pagesError}`)
+    if (isPdf) {
+      const pathError = validateFilePath(source)
+      if (pathError) {
+        console.error(`Error: ${pathError}`)
         process.exit(3)
       }
+
+      const pagesValue = values.pages
+      if (pagesValue) {
+        const pagesError = validatePages(pagesValue)
+        if (pagesError) {
+          console.error(`Error: ${pagesError}`)
+          process.exit(3)
+        }
+      }
+
+      const result = await runInspect(resolve(source), {
+        json: jsonMode,
+        pages: pagesValue,
+        outdir: values.outdir,
+      })
+      console.log(formatOutput(result, jsonMode))
+      process.exit(result.ok ? 0 : 1)
+    } else {
+      const result = await runInspectHtml(source, {
+        json: jsonMode,
+        isUrl,
+        isUrlList,
+        crawl: values.crawl ?? false,
+        maxDepth: values['max-depth'] ? Number.parseInt(values['max-depth'], 10) : 2,
+        maxPages: values['max-pages'] ? Number.parseInt(values['max-pages'], 10) : 50,
+        browser: values.browser ?? false,
+        outdir: values.outdir,
+      })
+      console.log(formatOutput(result, jsonMode))
+      process.exit(result.ok ? 0 : 1)
     }
-
-    const result = await runInspect(resolve(filePath), {
-      json: jsonMode,
-      pages: pagesValue,
-      outdir: values.outdir,
-    })
-
-    console.log(formatOutput(result, jsonMode))
-    process.exit(result.ok ? 0 : 1)
   }
 
   if (command === 'assemble') {
