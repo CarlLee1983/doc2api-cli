@@ -9,6 +9,7 @@ describe('runDoctor()', () => {
       expect(result.data).toHaveProperty('version')
       expect(result.data).toHaveProperty('python')
       expect(result.data).toHaveProperty('pdfplumber')
+      expect(result.data).toHaveProperty('playwright')
       expect(result.data.checks).toBeInstanceOf(Array)
     }
   })
@@ -20,6 +21,9 @@ describe('runDoctor()', () => {
       expect(checkNames).toContain('doc2api')
       expect(checkNames).toContain('python3')
       expect(checkNames).toContain('pdfplumber')
+      expect(checkNames).toContain('cheerio')
+      expect(checkNames).toContain('defuddle')
+      expect(checkNames).toContain('playwright')
     }
   })
 })

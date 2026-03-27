@@ -1,5 +1,6 @@
 import { ok } from '../output/result'
 import { checkPdfplumber } from '../bridge/pdfplumber'
+import { checkPlaywright } from '../pipeline/fetcher/browser-fetcher'
 import type { Result } from '../types/result'
 import { VERSION } from '../version'
 
@@ -13,6 +14,7 @@ interface DoctorData {
   readonly version: string
   readonly python: boolean
   readonly pdfplumber: boolean
+  readonly playwright: boolean
   readonly checks: readonly Check[]
 }
 
@@ -35,10 +37,23 @@ export async function runDoctor(): Promise<Result<DoctorData>> {
     detail: pyStatus.pdfplumber ? 'available' : 'not installed (table extraction disabled)',
   })
 
+  checks.push({ name: 'cheerio', status: 'ok', detail: 'available (bundled)' })
+  checks.push({ name: 'defuddle', status: 'ok', detail: 'available (bundled)' })
+
+  const hasPlaywright = await checkPlaywright()
+  checks.push({
+    name: 'playwright',
+    status: hasPlaywright ? 'ok' : 'warn',
+    detail: hasPlaywright
+      ? 'available'
+      : 'not installed (SPA rendering disabled, run: bun add playwright && bunx playwright install chromium)',
+  })
+
   return ok({
     version: VERSION,
     python: pyStatus.python,
     pdfplumber: pyStatus.pdfplumber,
+    playwright: hasPlaywright,
     checks,
   })
 }
