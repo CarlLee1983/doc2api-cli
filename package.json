@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "@readme/openapi-parser": "^6.0.0",
+    "cheerio": "^1.2.0",
+    "defuddle": "^0.14.0",
     "unpdf": "^1.4.0"
   }
 }
