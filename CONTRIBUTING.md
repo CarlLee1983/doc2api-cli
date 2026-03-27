@@ -1,4 +1,4 @@
-# Contributing to pdf2api
+# Contributing to doc2api
 
 ## Prerequisites
 
@@ -9,8 +9,8 @@
 ## Setup
 
 ```bash
-git clone https://github.com/carllee1983/pdf2api.git
-cd pdf2api
+git clone https://github.com/carllee1983/doc2api.git
+cd doc2api
 bun install
 ```
 
@@ -69,4 +69,4 @@ skills/           # AI Agent integration skills
 Use GitHub Issues. Include:
 - Steps to reproduce
 - Expected vs actual behavior
-- `pdf2api doctor --json` output
+- `doc2api doctor --json` output

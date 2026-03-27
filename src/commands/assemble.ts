@@ -42,7 +42,7 @@ export async function runAssemble(
   const validationError = validateAssembleInput(parsed)
   if (validationError) {
     return fail('E2002', 'MISSING_FIELDS', validationError, {
-      suggestion: 'See pdf2api documentation for the expected input format',
+      suggestion: 'See doc2api documentation for the expected input format',
     })
   }
 

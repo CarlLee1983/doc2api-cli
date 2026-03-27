@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pdf2api bridge — Extract tables from PDF using pdfplumber.
+doc2api bridge — Extract tables from PDF using pdfplumber.
 Outputs JSON to stdout. Logs to stderr.
 
 Usage:
