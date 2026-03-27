@@ -1,0 +1,28 @@
+{
+  "name": "@carllee1983/pdf2api",
+  "version": "0.1.0",
+  "description": "Convert PDF API documentation to OpenAPI 3.x specs — AI Agent collaboration tool",
+  "type": "module",
+  "bin": {
+    "pdf2api": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun --format esm",
+    "dev": "bun run src/index.ts",
+    "test": "bun test",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["pdf", "openapi", "api-docs", "cli", "ai-agent"],
+  "author": "Carl Lee",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "typescript": "^5.7.0",
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "unpdf": "^1.4.0"
+  }
+}
