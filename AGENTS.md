@@ -17,7 +17,7 @@ bun run src/index.ts        # Run CLI directly without building
 
 ## Architecture
 
-Pipeline-based CLI that converts PDF API documentation to OpenAPI 3.x specs, designed as a middle layer for AI Agent workflows:
+Pipeline-based CLI that converts API documentation (PDF, HTML) to OpenAPI 3.x specs, designed as a middle layer for AI Agent workflows:
 
 ```
 PDF ──► extract ──► chunk ──► classify ──► [AI Agent fills gaps] ──► assemble ──► OpenAPI spec

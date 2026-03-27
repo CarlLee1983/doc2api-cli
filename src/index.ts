@@ -26,13 +26,13 @@ const jsonMode = values.json ?? false
 
 async function main(): Promise<void> {
   if (!command || command === 'help') {
-    console.error(`pdf2api v${VERSION} — Convert PDF API docs to OpenAPI 3.x
+    console.error(`doc2api v${VERSION} — Convert API docs to OpenAPI 3.x
 
 Usage:
-  pdf2api inspect <file.pdf>    Extract and classify PDF content
-  pdf2api assemble <file.json>  Assemble endpoints into OpenAPI spec
-  pdf2api validate <file.json>  Validate an OpenAPI spec
-  pdf2api doctor                Check environment dependencies
+  doc2api inspect <source>       Extract and classify content (PDF or URL)
+  doc2api assemble <file.json>   Assemble endpoints into OpenAPI spec
+  doc2api validate <file.json>   Validate an OpenAPI spec
+  doc2api doctor                 Check environment dependencies
 
 Flags:
   --json          Output in JSON format (for AI agents)
@@ -46,7 +46,7 @@ Flags:
   if (command === 'inspect') {
     const filePath = positionals[1]
     if (!filePath) {
-      console.error('Error: pdf2api inspect requires a file path')
+      console.error('Error: doc2api inspect requires a file path')
       process.exit(3)
     }
 
@@ -80,7 +80,7 @@ Flags:
     const useStdin = values.stdin ?? false
 
     if (!filePath && !useStdin) {
-      console.error('Error: pdf2api assemble requires a file path or --stdin')
+      console.error('Error: doc2api assemble requires a file path or --stdin')
       process.exit(3)
     }
 
@@ -112,7 +112,7 @@ Flags:
   if (command === 'validate') {
     const filePath = positionals[1]
     if (!filePath) {
-      console.error('Error: pdf2api validate requires a file path')
+      console.error('Error: doc2api validate requires a file path')
       process.exit(3)
     }
 
@@ -144,7 +144,7 @@ Flags:
     process.exit(0)
   }
 
-  console.error(`Unknown command: ${command}. Run "pdf2api help" for usage.`)
+  console.error(`Unknown command: ${command}. Run "doc2api help" for usage.`)
   process.exit(1)
 }
 

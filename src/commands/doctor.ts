@@ -10,7 +10,7 @@ interface Check {
 }
 
 interface DoctorData {
-  readonly pdf2apiVersion: string
+  readonly version: string
   readonly python: boolean
   readonly pdfplumber: boolean
   readonly checks: readonly Check[]
@@ -19,7 +19,7 @@ interface DoctorData {
 export async function runDoctor(): Promise<Result<DoctorData>> {
   const checks: Check[] = []
 
-  checks.push({ name: 'pdf2api', status: 'ok', detail: `v${VERSION}` })
+  checks.push({ name: 'doc2api', status: 'ok', detail: `v${VERSION}` })
 
   const pyStatus = await checkPdfplumber()
 
@@ -36,7 +36,7 @@ export async function runDoctor(): Promise<Result<DoctorData>> {
   })
 
   return ok({
-    pdf2apiVersion: VERSION,
+    version: VERSION,
     python: pyStatus.python,
     pdfplumber: pyStatus.pdfplumber,
     checks,

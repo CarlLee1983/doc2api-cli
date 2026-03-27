@@ -80,7 +80,7 @@ async function tryExtractTables(
 ): Promise<ReadonlyMap<number, readonly Table[]>> {
   const status = await checkPdfplumber()
   if (!status.python || !status.pdfplumber) {
-    console.error('[pdf2api] Warning: pdfplumber not available, table extraction disabled')
+    console.error('[doc2api] Warning: pdfplumber not available, table extraction disabled')
     return new Map()
   }
 
