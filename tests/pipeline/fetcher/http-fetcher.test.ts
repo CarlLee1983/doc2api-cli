@@ -11,10 +11,18 @@ describe('fetchHtml', () => {
   })
 
   test('returns fail for unreachable host', async () => {
-    const result = await fetchHtml('http://localhost:19999/nonexistent')
+    const result = await fetchHtml('http://localhost:19999/nonexistent', { allowPrivate: true })
     expect(result.ok).toBe(false)
     if (!result.ok) {
       expect(result.error.code).toBe('E5001')
+    }
+  })
+
+  test('blocks private/internal addresses by default', async () => {
+    const result = await fetchHtml('http://localhost:19999/')
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error.type).toBe('SSRF_BLOCKED')
     }
   })
 
@@ -29,7 +37,7 @@ describe('fetchHtml', () => {
     })
 
     try {
-      const result = await fetchHtml(`http://localhost:${server.port}/`)
+      const result = await fetchHtml(`http://localhost:${server.port}/`, { allowPrivate: true })
       expect(result.ok).toBe(true)
       if (result.ok) {
         expect(result.data.html).toContain('<h1>Hello</h1>')
@@ -55,7 +63,7 @@ describe('fetchHtml', () => {
     })
 
     try {
-      const result = await fetchHtml(`http://localhost:${server.port}/old`)
+      const result = await fetchHtml(`http://localhost:${server.port}/old`, { allowPrivate: true })
       expect(result.ok).toBe(true)
       if (result.ok) {
         expect(result.data.html).toContain('Redirected')

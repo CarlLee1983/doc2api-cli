@@ -1,6 +1,7 @@
 import { fail, ok } from '../../output/result'
 import type { Result } from '../../types/result'
-import type { FetchResult } from './http-fetcher'
+import type { FetchOptions, FetchResult } from './http-fetcher'
+import { validateUrl } from './url-guard'
 
 interface PlaywrightPage {
   goto(url: string, options?: { waitUntil?: string; timeout?: number }): Promise<unknown>
@@ -32,17 +33,12 @@ export async function checkPlaywright(): Promise<boolean> {
   }
 }
 
-export async function fetchWithBrowser(url: string): Promise<Result<FetchResult>> {
-  try {
-    const parsed = new URL(url)
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return fail('E5001', 'FETCH_FAILED', `Unsupported protocol: ${parsed.protocol}`, {
-        suggestion: 'Only http:// and https:// URLs are supported',
-      })
-    }
-  } catch {
-    return fail('E5001', 'FETCH_FAILED', `Invalid URL: ${url}`)
-  }
+export async function fetchWithBrowser(
+  url: string,
+  options?: FetchOptions,
+): Promise<Result<FetchResult>> {
+  const urlCheck = validateUrl(url, options)
+  if (!urlCheck.ok) return urlCheck
 
   let playwright: PlaywrightModule
 

@@ -24,6 +24,7 @@ describe('extractHtml', () => {
     try {
       const result = await extractHtml({
         urls: [`http://localhost:${server.port}/`],
+        allowPrivate: true,
       })
       expect(result.ok).toBe(true)
       if (result.ok) {
@@ -57,6 +58,7 @@ describe('extractHtml', () => {
     try {
       const result = await extractHtml({
         urls: [`http://localhost:${server.port}/users`, `http://localhost:${server.port}/orders`],
+        allowPrivate: true,
       })
       expect(result.ok).toBe(true)
       if (result.ok) {

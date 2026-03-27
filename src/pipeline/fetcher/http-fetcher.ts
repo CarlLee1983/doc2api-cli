@@ -1,6 +1,8 @@
 import { fail, ok } from '../../output/result'
 import type { Result } from '../../types/result'
 import { VERSION } from '../../version'
+import type { ValidateUrlOptions } from './url-guard'
+import { validateUrl } from './url-guard'
 
 export interface FetchResult {
   readonly html: string
@@ -8,19 +10,11 @@ export interface FetchResult {
   readonly statusCode: number
 }
 
-export async function fetchHtml(url: string): Promise<Result<FetchResult>> {
-  try {
-    const parsed = new URL(url)
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return fail('E5001', 'FETCH_FAILED', `Unsupported protocol: ${parsed.protocol}`, {
-        suggestion: 'Only http:// and https:// URLs are supported',
-      })
-    }
-  } catch {
-    return fail('E5001', 'FETCH_FAILED', `Invalid URL: ${url}`, {
-      suggestion: 'Provide a valid URL starting with http:// or https://',
-    })
-  }
+export interface FetchOptions extends ValidateUrlOptions {}
+
+export async function fetchHtml(url: string, options?: FetchOptions): Promise<Result<FetchResult>> {
+  const urlCheck = validateUrl(url, options)
+  if (!urlCheck.ok) return urlCheck
 
   try {
     const response = await fetch(url, {

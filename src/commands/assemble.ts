@@ -89,13 +89,32 @@ function validateAssembleInput(data: unknown): string | null {
   return null
 }
 
+const STDIN_TIMEOUT_MS = 30_000
+const STDIN_MAX_BYTES = 50 * 1024 * 1024
+
 async function readStdin(): Promise<string> {
   const chunks: string[] = []
   const reader = Bun.stdin.stream().getReader()
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    chunks.push(new TextDecoder().decode(value))
+  let totalBytes = 0
+
+  const timer = setTimeout(() => {
+    reader.cancel()
+  }, STDIN_TIMEOUT_MS)
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      totalBytes += value.byteLength
+      if (totalBytes > STDIN_MAX_BYTES) {
+        reader.cancel()
+        throw new Error(`Stdin input exceeds maximum size (${STDIN_MAX_BYTES / 1024 / 1024}MB)`)
+      }
+      chunks.push(new TextDecoder().decode(value))
+    }
+  } finally {
+    clearTimeout(timer)
   }
+
   return chunks.join('')
 }

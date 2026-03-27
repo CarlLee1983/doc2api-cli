@@ -18,6 +18,7 @@ export interface HtmlExtractOptions {
     readonly maxPages?: number
   }
   readonly forceBrowser?: boolean
+  readonly allowPrivate?: boolean
 }
 
 const SPECIALIZED_PARSERS = [readmeParser] as const
@@ -25,18 +26,20 @@ const SPECIALIZED_PARSERS = [readmeParser] as const
 async function fetchPageHtml(
   url: string,
   forceBrowser: boolean,
+  allowPrivate = false,
 ): Promise<Result<{ html: string; url: string }>> {
+  const fetchOpts = allowPrivate ? { allowPrivate } : undefined
   if (forceBrowser) {
-    return fetchWithBrowser(url)
+    return fetchWithBrowser(url, fetchOpts)
   }
 
-  const result = await fetchHtml(url)
+  const result = await fetchHtml(url, fetchOpts)
   if (!result.ok) return result
 
   if (detectSpa(result.data.html)) {
     const hasPw = await checkPlaywright()
     if (hasPw) {
-      return fetchWithBrowser(url)
+      return fetchWithBrowser(url, fetchOpts)
     }
     console.error('[doc2api] Warning: SPA detected but Playwright not installed, using static HTML')
   }
@@ -56,7 +59,7 @@ function parseHtml(html: string, url: string, pageNumberOffset: number): readonl
 }
 
 export async function extractHtml(options: HtmlExtractOptions): Promise<Result<ExtractResult>> {
-  const { urls, crawl: crawlOptions, forceBrowser = false } = options
+  const { urls, crawl: crawlOptions, forceBrowser = false, allowPrivate = false } = options
 
   if (urls.length === 0 && !crawlOptions) {
     return fail('E5005', 'NO_URLS', 'No URLs provided for HTML extraction', {
@@ -74,7 +77,7 @@ export async function extractHtml(options: HtmlExtractOptions): Promise<Result<E
       concurrency: 3,
     }
 
-    const crawlResult = await crawl(opts, forceBrowser)
+    const crawlResult = await crawl(opts, forceBrowser, allowPrivate)
     if (!crawlResult.ok) return crawlResult
 
     for (const page of crawlResult.data.pages) {
@@ -83,7 +86,7 @@ export async function extractHtml(options: HtmlExtractOptions): Promise<Result<E
     }
   } else {
     for (const url of urls) {
-      const fetchResult = await fetchPageHtml(url, forceBrowser)
+      const fetchResult = await fetchPageHtml(url, forceBrowser, allowPrivate)
       if (!fetchResult.ok) {
         console.error(`[doc2api] Warning: failed to fetch ${url}: ${fetchResult.error.message}`)
         continue

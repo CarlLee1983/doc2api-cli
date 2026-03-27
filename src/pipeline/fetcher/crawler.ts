@@ -89,12 +89,14 @@ function extractLinks(html: string, baseUrl: string): readonly string[] {
 async function fetchPage(
   url: string,
   forceBrowser: boolean,
+  allowPrivate = false,
 ): Promise<Result<{ html: string; url: string }>> {
+  const fetchOpts = allowPrivate ? { allowPrivate } : undefined
   if (forceBrowser) {
-    return fetchWithBrowser(url)
+    return fetchWithBrowser(url, fetchOpts)
   }
 
-  const result = await fetchHtml(url)
+  const result = await fetchHtml(url, fetchOpts)
   if (!result.ok) return result
 
   if (detectSpa(result.data.html)) {
@@ -106,7 +108,7 @@ async function fetchPage(
       )
       return ok({ html: result.data.html, url: result.data.url })
     }
-    return fetchWithBrowser(url)
+    return fetchWithBrowser(url, fetchOpts)
   }
 
   return ok({ html: result.data.html, url: result.data.url })
@@ -115,6 +117,7 @@ async function fetchPage(
 export async function crawl(
   options: CrawlOptions,
   forceBrowser = false,
+  allowPrivate = false,
 ): Promise<Result<CrawlResult>> {
   const visited = new Set<string>()
   const pages: FetchedPage[] = []
@@ -131,7 +134,7 @@ export async function crawl(
           return true
         })
         .map(async (item) => {
-          const result = await fetchPage(item.url, forceBrowser)
+          const result = await fetchPage(item.url, forceBrowser, allowPrivate)
           return { ...item, result }
         }),
     )
