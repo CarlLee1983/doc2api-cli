@@ -18,12 +18,24 @@ export interface InspectHtmlFlags {
   readonly outdir?: string
 }
 
-async function readUrlList(filePath: string): Promise<readonly string[]> {
-  const content = await Bun.file(resolve(filePath)).text()
-  return content
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith('#'))
+async function readUrlList(filePath: string): Promise<Result<readonly string[]>> {
+  try {
+    const file = Bun.file(resolve(filePath))
+    if (!(await file.exists())) {
+      return fail('E3001', 'FILE_NOT_FOUND', `URL list file not found: ${filePath}`, {
+        suggestion: 'Check the file path and try again',
+      })
+    }
+    const content = await file.text()
+    const urls = content
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith('#'))
+    return ok(urls)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return fail('E3001', 'FILE_NOT_FOUND', `Failed to read ${filePath}: ${message}`)
+  }
 }
 
 export async function runInspectHtml(
@@ -36,13 +48,28 @@ export async function runInspectHtml(
   }
 
   if (flags.isUrlList) {
-    const urls = await readUrlList(source)
-    if (urls.length === 0) {
+    const urlsResult = await readUrlList(source)
+    if (!urlsResult.ok) return urlsResult
+    if (urlsResult.data.length === 0) {
       return fail('E5005', 'NO_CONTENT', `No URLs found in ${source}`, {
         suggestion: 'Add URLs to the file, one per line',
       })
     }
-    options = { ...options, urls }
+    const validUrls = urlsResult.data.filter((url) => {
+      try {
+        const parsed = new URL(url)
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+      } catch {
+        console.error(`[doc2api] Warning: Skipping invalid URL: ${url}`)
+        return false
+      }
+    })
+    if (validUrls.length === 0) {
+      return fail('E5005', 'NO_CONTENT', `No valid URLs found in ${source}`, {
+        suggestion: 'Ensure URLs start with http:// or https://',
+      })
+    }
+    options = { ...options, urls: validUrls }
   } else if (flags.crawl) {
     options = {
       ...options,

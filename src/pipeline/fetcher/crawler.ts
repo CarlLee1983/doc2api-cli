@@ -100,10 +100,11 @@ async function fetchPage(
   if (detectSpa(result.data.html)) {
     const hasPw = await checkPlaywright()
     if (!hasPw) {
-      return fail('E5002', 'BROWSER_REQUIRED', 'SPA detected but Playwright not installed', {
-        suggestion: 'Install Playwright: bun add playwright && bunx playwright install chromium',
-        context: { url },
-      })
+      // Graceful degradation — use static HTML (consistent with pdfplumber pattern)
+      console.error(
+        `[doc2api] Warning: SPA detected but Playwright not installed, using static HTML for ${url}`,
+      )
+      return ok({ html: result.data.html, url: result.data.url })
     }
     return fetchWithBrowser(url)
   }

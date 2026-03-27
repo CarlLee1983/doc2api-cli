@@ -38,7 +38,6 @@ export async function runDoctor(): Promise<Result<DoctorData>> {
   })
 
   checks.push({ name: 'cheerio', status: 'ok', detail: 'available (bundled)' })
-  checks.push({ name: 'defuddle', status: 'ok', detail: 'available (bundled)' })
 
   const hasPlaywright = await checkPlaywright()
   checks.push({

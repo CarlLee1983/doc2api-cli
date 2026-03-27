@@ -1,5 +1,6 @@
 import { fail, ok } from '../../output/result'
 import type { Result } from '../../types/result'
+import { VERSION } from '../../version'
 
 export interface FetchResult {
   readonly html: string
@@ -9,7 +10,12 @@ export interface FetchResult {
 
 export async function fetchHtml(url: string): Promise<Result<FetchResult>> {
   try {
-    new URL(url)
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return fail('E5001', 'FETCH_FAILED', `Unsupported protocol: ${parsed.protocol}`, {
+        suggestion: 'Only http:// and https:// URLs are supported',
+      })
+    }
   } catch {
     return fail('E5001', 'FETCH_FAILED', `Invalid URL: ${url}`, {
       suggestion: 'Provide a valid URL starting with http:// or https://',
@@ -19,7 +25,7 @@ export async function fetchHtml(url: string): Promise<Result<FetchResult>> {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'doc2api/0.2.0',
+        'User-Agent': `doc2api/${VERSION}`,
         Accept: 'text/html,application/xhtml+xml,*/*',
       },
       redirect: 'follow',

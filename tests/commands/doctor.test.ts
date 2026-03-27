@@ -22,7 +22,6 @@ describe('runDoctor()', () => {
       expect(checkNames).toContain('python3')
       expect(checkNames).toContain('pdfplumber')
       expect(checkNames).toContain('cheerio')
-      expect(checkNames).toContain('defuddle')
       expect(checkNames).toContain('playwright')
     }
   })

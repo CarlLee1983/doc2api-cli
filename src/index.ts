@@ -44,7 +44,11 @@ Flags:
   -o, --output    Output file path
   --pages         Page range (e.g., 1-10)
   --stdin         Read input from stdin
-  --format        Output format: yaml (default) or json`)
+  --format        Output format: yaml (default) or json
+  --crawl         Crawl linked pages from the entry URL
+  --max-depth     Max crawl depth (default: 2)
+  --max-pages     Max pages to crawl (default: 50)
+  --browser       Force Playwright browser for SPA rendering`)
     process.exit(command ? 0 : 1)
   }
 

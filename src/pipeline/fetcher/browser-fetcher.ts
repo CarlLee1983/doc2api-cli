@@ -33,6 +33,17 @@ export async function checkPlaywright(): Promise<boolean> {
 }
 
 export async function fetchWithBrowser(url: string): Promise<Result<FetchResult>> {
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return fail('E5001', 'FETCH_FAILED', `Unsupported protocol: ${parsed.protocol}`, {
+        suggestion: 'Only http:// and https:// URLs are supported',
+      })
+    }
+  } catch {
+    return fail('E5001', 'FETCH_FAILED', `Invalid URL: ${url}`)
+  }
+
   let playwright: PlaywrightModule
 
   try {
