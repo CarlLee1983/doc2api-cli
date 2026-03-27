@@ -2,6 +2,7 @@
 import { parseArgs } from 'node:util'
 import { resolve } from 'node:path'
 import { runInspect } from './commands/inspect'
+import { runAssemble } from './commands/assemble'
 import { formatOutput } from './output/formatter'
 
 const { positionals, values } = parseArgs({
@@ -54,6 +55,32 @@ Flags:
 
     console.log(formatOutput(result, jsonMode))
     process.exit(result.ok ? 0 : 1)
+  }
+
+  if (command === 'assemble') {
+    const filePath = positionals[1]
+    const useStdin = values.stdin as boolean
+
+    if (!filePath && !useStdin) {
+      console.error('Error: pdf2api assemble requires a file path or --stdin')
+      process.exit(3)
+    }
+
+    const result = await runAssemble(filePath ? resolve(filePath) : '', {
+      json: jsonMode,
+      stdin: useStdin,
+      output: values.output as string | undefined,
+      format: (values.format as 'yaml' | 'json') ?? 'yaml',
+    })
+
+    if (result.ok && values.output) {
+      const outputPath = values.output as string
+      await Bun.write(resolve(outputPath), JSON.stringify(result.data.spec, null, 2))
+      console.error(`Wrote OpenAPI spec to ${outputPath}`)
+    }
+
+    console.log(formatOutput(result, jsonMode))
+    process.exit(result.ok ? 0 : 2)
   }
 
   console.error(`Unknown command: ${command}. Run "pdf2api help" for usage.`)
