@@ -6,8 +6,7 @@ interface ClassifyRule {
   readonly test: (chunk: RawChunk) => number // Returns confidence 0-1
 }
 
-const ENDPOINT_PATTERN =
-  /\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+\/[a-zA-Z0-9_\-\/{}.]+/i
+const ENDPOINT_PATTERN = /\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+\/[a-zA-Z0-9_\-\/{}.]+/i
 const AUTH_PATTERN =
   /\b(auth(?:entication|orization)|bearer\s+token|api[_\s]?key|oauth|jwt|session\s+token)/i
 const RESPONSE_PATTERN = /\b(response|回應)[:\s].*[{[\]]/i

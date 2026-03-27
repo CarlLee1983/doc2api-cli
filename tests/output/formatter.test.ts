@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { formatOutput } from '../../src/output/formatter'
-import { ok, fail } from '../../src/output/result'
+import { fail, ok } from '../../src/output/result'
 
 describe('formatOutput()', () => {
   test('json mode returns JSON string', () => {

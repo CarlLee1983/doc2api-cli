@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>API Reference - ReadMe</title>
+  <meta name="generator" content="readme">
+</head>
+<body>
+  <nav class="rm-Sidebar"><a href="/docs/authentication">Auth</a></nav>
+  <article class="rm-Article">
+    <h1>Get User</h1>
+    <div class="rm-APIMethod">
+      <span class="rm-APIMethod-type">GET</span>
+      <span class="rm-APIMethod-path">/api/v1/users/{id}</span>
+    </div>
+    <p>Retrieve a single user by ID.</p>
+    <div class="rm-ParamsTable">
+      <table>
+        <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>id</td><td>string</td><td>Yes</td><td>User ID</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rm-CodeResponse">
+      <pre><code>{
+  "id": "usr_123",
+  "name": "Alice",
+  "email": "alice@example.com"
+}</code></pre>
+    </div>
+  </article>
+  <footer>Powered by ReadMe</footer>
+</body>
+</html>

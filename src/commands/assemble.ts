@@ -1,9 +1,9 @@
-import type { Result } from '../types/result'
-import type { AssembleInput } from '../types/endpoint'
-import type { AssembleFlags } from '../types/config'
 import type { OpenApiSpec } from '../assembler/openapi-builder'
-import { ok, fail } from '../output/result'
 import { buildOpenApiSpec } from '../assembler/openapi-builder'
+import { fail, ok } from '../output/result'
+import type { AssembleFlags } from '../types/config'
+import type { AssembleInput } from '../types/endpoint'
+import type { Result } from '../types/result'
 
 export interface AssembleData {
   readonly spec: OpenApiSpec
@@ -42,7 +42,7 @@ export async function runAssemble(
   const validationError = validateAssembleInput(parsed)
   if (validationError) {
     return fail('E2002', 'MISSING_FIELDS', validationError, {
-      suggestion: 'See pdf2api documentation for the expected input format',
+      suggestion: 'See doc2api documentation for the expected input format',
     })
   }
 

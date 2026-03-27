@@ -6,7 +6,12 @@ describe('buildOpenApiSpec()', () => {
   const minimalInput: AssembleInput = {
     info: { title: 'Test API', version: '1.0.0' },
     endpoints: [
-      { path: '/users', method: 'get', summary: 'List users', responses: { '200': { description: 'Success' } } },
+      {
+        path: '/users',
+        method: 'get',
+        summary: 'List users',
+        responses: { '200': { description: 'Success' } },
+      },
     ],
   }
 
@@ -34,14 +39,21 @@ describe('buildOpenApiSpec()', () => {
   test('maps requestBody correctly', () => {
     const input: AssembleInput = {
       info: { title: 'Test', version: '1.0.0' },
-      endpoints: [{
-        path: '/users', method: 'post', summary: 'Create user',
-        requestBody: {
-          properties: { name: { type: 'string', description: 'User name' }, age: { type: 'integer' } },
-          required: ['name'],
+      endpoints: [
+        {
+          path: '/users',
+          method: 'post',
+          summary: 'Create user',
+          requestBody: {
+            properties: {
+              name: { type: 'string', description: 'User name' },
+              age: { type: 'integer' },
+            },
+            required: ['name'],
+          },
+          responses: { '201': { description: 'Created' } },
         },
-        responses: { '201': { description: 'Created' } },
-      }],
+      ],
     }
     const spec = buildOpenApiSpec(input)
     const post = spec.paths['/users'].post
@@ -53,11 +65,14 @@ describe('buildOpenApiSpec()', () => {
   test('maps parameters correctly', () => {
     const input: AssembleInput = {
       info: { title: 'Test', version: '1.0.0' },
-      endpoints: [{
-        path: '/users/{id}', method: 'get',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: { '200': { description: 'OK' } },
-      }],
+      endpoints: [
+        {
+          path: '/users/{id}',
+          method: 'get',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'OK' } },
+        },
+      ],
     }
     const spec = buildOpenApiSpec(input)
     expect(spec.paths['/users/{id}'].get.parameters).toHaveLength(1)

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { runInspect } from '../../src/commands/inspect'
 import { resolve } from 'node:path'
+import { runInspect } from '../../src/commands/inspect'
 
 const FIXTURE_DIR = resolve(import.meta.dir, '../fixtures')
 

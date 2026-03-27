@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { runAssemble } from '../../src/commands/assemble'
 import { resolve } from 'node:path'
+import { runAssemble } from '../../src/commands/assemble'
 
 const FIXTURE_DIR = resolve(import.meta.dir, '../fixtures')
 
@@ -26,7 +26,11 @@ describe('runAssemble()', () => {
   })
 
   test('returns error for missing file', async () => {
-    const result = await runAssemble('/no/such/file.json', { json: true, stdin: false, format: 'json' })
+    const result = await runAssemble('/no/such/file.json', {
+      json: true,
+      stdin: false,
+      format: 'json',
+    })
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.type).toBe('FILE_NOT_FOUND')
   })

@@ -1,16 +1,16 @@
 ---
-name: pdf2api
-description: Convert PDF API documentation to OpenAPI 3.x specs. Use when a user provides a PDF containing API docs and wants to generate an OpenAPI specification, or when working with pdf2api CLI commands (inspect, assemble, validate, doctor). Triggers on tasks like "convert this API PDF to OpenAPI", "extract endpoints from PDF", "generate spec from documentation".
+name: doc2api
+description: Convert PDF API documentation to OpenAPI 3.x specs. Use when a user provides a PDF containing API docs and wants to generate an OpenAPI specification, or when working with doc2api CLI commands (inspect, assemble, validate, doctor). Triggers on tasks like "convert this API PDF to OpenAPI", "extract endpoints from PDF", "generate spec from documentation".
 ---
 
-# pdf2api — PDF to OpenAPI Converter
+# doc2api — PDF to OpenAPI Converter
 
 Convert PDF API documentation into OpenAPI 3.0.3 specs. The CLI extracts and classifies content — the AI Agent provides semantic understanding between extraction and assembly.
 
 ## Prerequisites
 
 ```bash
-pdf2api doctor --json
+doc2api doctor --json
 ```
 
 Verify `python` and `pdfplumber` are available. Table extraction is disabled without them (text extraction still works).
@@ -20,8 +20,8 @@ Verify `python` and `pdfplumber` are available. Table extraction is disabled wit
 ### 1. Inspect the PDF
 
 ```bash
-pdf2api inspect <file.pdf> --json
-pdf2api inspect <file.pdf> --json --pages 1-20   # large PDFs: process specific pages
+doc2api inspect <file.pdf> --json
+doc2api inspect <file.pdf> --json --pages 1-20   # large PDFs: process specific pages
 ```
 
 Returns chunks with type and confidence:
@@ -83,14 +83,14 @@ Tips:
 ### 3. Assemble
 
 ```bash
-pdf2api assemble endpoints.json -o spec.json --format json
-echo '<json>' | pdf2api assemble --stdin -o spec.json
+doc2api assemble endpoints.json -o spec.json --format json
+echo '<json>' | doc2api assemble --stdin -o spec.json
 ```
 
 ### 4. Validate
 
 ```bash
-pdf2api validate spec.json --json
+doc2api validate spec.json --json
 ```
 
 Fix errors and re-run until it passes.

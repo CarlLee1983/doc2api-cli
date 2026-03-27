@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Example API Documentation</title></head>
+<body>
+  <nav><a href="/">Home</a><a href="/docs">Docs</a></nav>
+  <main>
+    <h1>Example API</h1>
+    <p>Welcome to the Example API documentation.</p>
+
+    <h2>Authentication</h2>
+    <p>All requests require a Bearer token in the Authorization header.</p>
+
+    <h2>GET /users</h2>
+    <p>Returns a list of users.</p>
+    <h3>Parameters</h3>
+    <table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>page</td><td>integer</td><td>No</td><td>Page number</td></tr>
+        <tr><td>limit</td><td>integer</td><td>No</td><td>Items per page</td></tr>
+      </tbody>
+    </table>
+    <h3>Response</h3>
+    <pre><code>{
+  "users": [
+    { "id": 1, "name": "Alice", "email": "alice@example.com" }
+  ],
+  "total": 100
+}</code></pre>
+
+    <h2>POST /users</h2>
+    <p>Create a new user.</p>
+    <h3>Request Body</h3>
+    <table>
+      <thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>name</td><td>string</td><td>Yes</td><td>User name</td></tr>
+        <tr><td>email</td><td>string</td><td>Yes</td><td>User email</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Error Codes</h2>
+    <table>
+      <thead><tr><th>Status Code</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>400</td><td>Bad Request</td></tr>
+        <tr><td>401</td><td>Unauthorized</td></tr>
+        <tr><td>404</td><td>Not Found</td></tr>
+        <tr><td>500</td><td>Internal Server Error</td></tr>
+      </tbody>
+    </table>
+  </main>
+  <footer>Copyright 2026</footer>
+</body>
+</html>

@@ -11,7 +11,8 @@ export function inferSchema(value: unknown, depth = 0): InferredSchema {
   if (value === null || value === undefined) return { type: 'string', nullable: true }
   if (depth >= MAX_DEPTH) return { type: 'object' }
   if (typeof value === 'boolean') return { type: 'boolean' }
-  if (typeof value === 'number') return Number.isInteger(value) ? { type: 'integer' } : { type: 'number' }
+  if (typeof value === 'number')
+    return Number.isInteger(value) ? { type: 'integer' } : { type: 'number' }
   if (typeof value === 'string') return { type: 'string' }
   if (Array.isArray(value)) {
     if (value.length === 0) return { type: 'array', items: { type: 'string' } }

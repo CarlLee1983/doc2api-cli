@@ -49,18 +49,14 @@ describe('chunkPages()', () => {
   })
 
   test('preserves page number from source', () => {
-    const pages: RawPage[] = [
-      { pageNumber: 3, text: 'Content on page three.', tables: [] },
-    ]
+    const pages: RawPage[] = [{ pageNumber: 3, text: 'Content on page three.', tables: [] }]
 
     const chunks = chunkPages(pages)
     expect(chunks.every((c) => c.page === 3)).toBe(true)
   })
 
   test('handles empty pages', () => {
-    const pages: RawPage[] = [
-      { pageNumber: 1, text: '', tables: [] },
-    ]
+    const pages: RawPage[] = [{ pageNumber: 1, text: '', tables: [] }]
 
     const chunks = chunkPages(pages)
     expect(chunks).toHaveLength(0)

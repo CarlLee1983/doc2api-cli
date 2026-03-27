@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for pdf2api
+about: Suggest a new feature for doc2api
 title: "[feat] "
 labels: enhancement
 ---

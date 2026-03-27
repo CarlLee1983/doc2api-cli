@@ -1,6 +1,6 @@
 import { validate } from '@readme/openapi-parser'
+import { fail, ok } from '../output/result'
 import type { Result } from '../types/result'
-import { ok, fail } from '../output/result'
 
 export interface ValidationResult {
   readonly valid: boolean

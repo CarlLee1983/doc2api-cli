@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in pdf2api
+about: Report a bug in doc2api
 title: "[bug] "
 labels: bug
 ---
@@ -11,7 +11,7 @@ A clear description of the bug.
 
 ## Steps to Reproduce
 
-1. Run `pdf2api ...`
+1. Run `doc2api ...`
 2. ...
 
 ## Expected Behavior
@@ -24,7 +24,7 @@ What actually happened. Include error output if applicable.
 
 ## Environment
 
-Paste the output of `pdf2api doctor --json`:
+Paste the output of `doc2api doctor --json`:
 
 ```json
 
