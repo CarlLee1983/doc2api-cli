@@ -3,6 +3,8 @@ import { parseArgs } from 'node:util'
 import { resolve } from 'node:path'
 import { runInspect } from './commands/inspect'
 import { runAssemble } from './commands/assemble'
+import { runValidate } from './commands/validate'
+import { runDoctor } from './commands/doctor'
 import { formatOutput } from './output/formatter'
 
 const { positionals, values } = parseArgs({
@@ -81,6 +83,35 @@ Flags:
 
     console.log(formatOutput(result, jsonMode))
     process.exit(result.ok ? 0 : 2)
+  }
+
+  if (command === 'validate') {
+    const filePath = positionals[1]
+    if (!filePath) {
+      console.error('Error: pdf2api validate requires a file path')
+      process.exit(3)
+    }
+
+    const result = await runValidate(resolve(filePath), { json: jsonMode })
+    console.log(formatOutput(result, jsonMode))
+
+    if (result.ok && !result.data.valid) {
+      process.exit(4)
+    }
+    process.exit(result.ok ? 0 : 4)
+  }
+
+  if (command === 'doctor') {
+    const result = await runDoctor()
+    if (jsonMode) {
+      console.log(formatOutput(result, true))
+    } else if (result.ok) {
+      for (const check of result.data.checks) {
+        const icon = check.status === 'ok' ? 'ok' : check.status === 'warn' ? '!!' : 'FAIL'
+        console.log(`  ${icon}  ${check.name}: ${check.detail}`)
+      }
+    }
+    process.exit(0)
   }
 
   console.error(`Unknown command: ${command}. Run "pdf2api help" for usage.`)

@@ -23,6 +23,7 @@
     "@types/bun": "latest"
   },
   "dependencies": {
+    "@readme/openapi-parser": "^6.0.0",
     "unpdf": "^1.4.0"
   }
 }
