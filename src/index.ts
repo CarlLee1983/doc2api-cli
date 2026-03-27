@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
 import { parseArgs } from 'node:util'
 import { resolve } from 'node:path'
+import { validateFilePath, validatePages } from './bridge/pdfplumber'
 import { runInspect } from './commands/inspect'
 import { runAssemble } from './commands/assemble'
 import { runValidate } from './commands/validate'
 import { runDoctor } from './commands/doctor'
 import { formatOutput } from './output/formatter'
+import { VERSION } from './version'
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
-  strict: false,
   options: {
     json: { type: 'boolean', default: false },
     output: { type: 'string', short: 'o' },
@@ -21,16 +22,16 @@ const { positionals, values } = parseArgs({
 })
 
 const command = positionals[0]
-const jsonMode = values.json as boolean
+const jsonMode = values.json ?? false
 
 async function main(): Promise<void> {
   if (!command || command === 'help') {
-    console.error(`pdf2api v0.1.0 — Convert PDF API docs to OpenAPI 3.x
+    console.error(`pdf2api v${VERSION} — Convert PDF API docs to OpenAPI 3.x
 
 Usage:
   pdf2api inspect <file.pdf>    Extract and classify PDF content
   pdf2api assemble <file.json>  Assemble endpoints into OpenAPI spec
-  pdf2api validate <file.yaml>  Validate an OpenAPI spec
+  pdf2api validate <file.json>  Validate an OpenAPI spec
   pdf2api doctor                Check environment dependencies
 
 Flags:
@@ -49,10 +50,25 @@ Flags:
       process.exit(3)
     }
 
+    const pathError = validateFilePath(filePath)
+    if (pathError) {
+      console.error(`Error: ${pathError}`)
+      process.exit(3)
+    }
+
+    const pagesValue = values.pages
+    if (pagesValue) {
+      const pagesError = validatePages(pagesValue)
+      if (pagesError) {
+        console.error(`Error: ${pagesError}`)
+        process.exit(3)
+      }
+    }
+
     const result = await runInspect(resolve(filePath), {
       json: jsonMode,
-      pages: values.pages as string | undefined,
-      outdir: values.outdir as string | undefined,
+      pages: pagesValue,
+      outdir: values.outdir,
     })
 
     console.log(formatOutput(result, jsonMode))
@@ -61,22 +77,30 @@ Flags:
 
   if (command === 'assemble') {
     const filePath = positionals[1]
-    const useStdin = values.stdin as boolean
+    const useStdin = values.stdin ?? false
 
     if (!filePath && !useStdin) {
       console.error('Error: pdf2api assemble requires a file path or --stdin')
       process.exit(3)
     }
 
+    if (filePath) {
+      const pathError = validateFilePath(filePath)
+      if (pathError) {
+        console.error(`Error: ${pathError}`)
+        process.exit(3)
+      }
+    }
+
     const result = await runAssemble(filePath ? resolve(filePath) : '', {
       json: jsonMode,
       stdin: useStdin,
-      output: values.output as string | undefined,
-      format: (values.format as 'yaml' | 'json') ?? 'yaml',
+      output: values.output,
+      format: (values.format ?? 'yaml') as 'yaml' | 'json',
     })
 
     if (result.ok && values.output) {
-      const outputPath = values.output as string
+      const outputPath = values.output!
       await Bun.write(resolve(outputPath), JSON.stringify(result.data.spec, null, 2))
       console.error(`Wrote OpenAPI spec to ${outputPath}`)
     }
@@ -89,6 +113,12 @@ Flags:
     const filePath = positionals[1]
     if (!filePath) {
       console.error('Error: pdf2api validate requires a file path')
+      process.exit(3)
+    }
+
+    const pathError = validateFilePath(filePath)
+    if (pathError) {
+      console.error(`Error: ${pathError}`)
       process.exit(3)
     }
 

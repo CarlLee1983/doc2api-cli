@@ -65,11 +65,17 @@ def extract_tables(pdf_path, page_range=None):
 def parse_page_range(s):
     if not s:
         return None
-    parts = s.split("-")
-    if len(parts) == 1:
-        n = int(parts[0])
-        return (n, n)
-    return (int(parts[0]), int(parts[1]))
+    try:
+        parts = s.split("-")
+        if len(parts) == 1:
+            n = int(parts[0])
+            return (n, n)
+        if len(parts) == 2:
+            return (int(parts[0]), int(parts[1]))
+        raise ValueError(f"Invalid format: {s}")
+    except ValueError:
+        print(json.dumps({"ok": False, "error": f"Invalid page range: {s}. Expected N or N-M (e.g., 1-10)"}))
+        sys.exit(1)
 
 
 if __name__ == "__main__":

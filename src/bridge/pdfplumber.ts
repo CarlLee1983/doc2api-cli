@@ -43,11 +43,39 @@ export async function checkPdfplumber(): Promise<PdfplumberStatus> {
   }
 }
 
+const PAGES_PATTERN = /^\d+(-\d+)?$/
+
+export function validatePages(pages: string): string | null {
+  if (!PAGES_PATTERN.test(pages)) {
+    return `Invalid pages format: "${pages}". Expected "N" or "N-M" (e.g., 1-10)`
+  }
+  return null
+}
+
+export function validateFilePath(filePath: string): string | null {
+  if (filePath.includes('\0')) {
+    return 'Invalid file path: contains null bytes'
+  }
+  if (filePath.includes('..')) {
+    return 'Invalid file path: path traversal not allowed'
+  }
+  return null
+}
+
 export async function extractTables(pdfPath: string, pages?: string): Promise<BridgeResult> {
+  const pathError = validateFilePath(pdfPath)
+  if (pathError) {
+    return { ok: false, error: pathError }
+  }
+
   const bridgePath = getBridgePath()
   const args = [bridgePath, pdfPath]
 
   if (pages) {
+    const pagesError = validatePages(pages)
+    if (pagesError) {
+      return { ok: false, error: pagesError }
+    }
     args.push('--pages', pages)
   }
 
@@ -60,7 +88,7 @@ export async function extractTables(pdfPath: string, pages?: string): Promise<Br
   try {
     return JSON.parse(result.stdout) as BridgeResult
   } catch {
-    return { ok: false, error: `Invalid JSON from bridge: ${result.stdout.slice(0, 200)}` }
+    return { ok: false, error: 'Python bridge returned invalid JSON output' }
   }
 }
 
