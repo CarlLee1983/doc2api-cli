@@ -14,9 +14,13 @@ describe('validateSpec()', () => {
     expect(result.ok).toBe(true)
   })
 
-  test('fails for invalid spec (missing info)', async () => {
+  test('returns valid=false for invalid spec (missing info)', async () => {
     const spec = { openapi: '3.0.3', paths: {} }
     const result = await validateSpec(spec)
-    expect(result.ok).toBe(false)
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.data.valid).toBe(false)
+      expect(result.data.errors.length).toBeGreaterThan(0)
+    }
   })
 })

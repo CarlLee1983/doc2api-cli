@@ -29,6 +29,23 @@ const { positionals, values } = parseArgs({
 const command = positionals[0]
 const jsonMode = values.json ?? false
 
+function formatAsYaml(data: unknown): string {
+  // js-yaml is available as a transitive dependency via @readme/openapi-parser
+  // biome-ignore lint/suspicious/noExplicitAny: dynamic require for optional transitive dep
+  const yaml = require('js-yaml') as { dump: (data: any, opts?: any) => string }
+  return yaml.dump(data, { lineWidth: 100, noRefs: true })
+}
+
+function parsePositiveInt(value: string | undefined, name: string, defaultValue: number): number {
+  if (!value) return defaultValue
+  const parsed = Number.parseInt(value, 10)
+  if (Number.isNaN(parsed) || parsed < 0) {
+    console.error(`Error: --${name} must be a non-negative integer, got "${value}"`)
+    process.exit(3)
+  }
+  return parsed
+}
+
 async function main(): Promise<void> {
   if (!command || command === 'help') {
     console.error(`doc2api v${VERSION} — Convert API docs to OpenAPI 3.x
@@ -87,13 +104,16 @@ Flags:
       console.log(formatOutput(result, jsonMode))
       process.exit(result.ok ? 0 : 1)
     } else {
+      const maxDepth = parsePositiveInt(values['max-depth'], 'max-depth', 2)
+      const maxPages = parsePositiveInt(values['max-pages'], 'max-pages', 50)
+
       const result = await runInspectHtml(source, {
         json: jsonMode,
         isUrl,
         isUrlList,
         crawl: values.crawl ?? false,
-        maxDepth: values['max-depth'] ? Number.parseInt(values['max-depth'], 10) : 2,
-        maxPages: values['max-pages'] ? Number.parseInt(values['max-pages'], 10) : 50,
+        maxDepth,
+        maxPages,
         browser: values.browser ?? false,
         outdir: values.outdir,
       })
@@ -128,7 +148,12 @@ Flags:
 
     if (result.ok && values.output) {
       const outputPath = values.output
-      await Bun.write(resolve(outputPath), JSON.stringify(result.data.spec, null, 2))
+      const format = values.format ?? 'yaml'
+      const content =
+        format === 'json'
+          ? JSON.stringify(result.data.spec, null, 2)
+          : formatAsYaml(result.data.spec)
+      await Bun.write(resolve(outputPath), content)
       console.error(`Wrote OpenAPI spec to ${outputPath}`)
     }
 

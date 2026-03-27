@@ -14,9 +14,7 @@ export async function validateSpec(spec: unknown): Promise<Result<ValidationResu
     const result = await validate(specDoc)
     if (!result.valid) {
       const errors = result.errors?.map((e: { message: string }) => e.message) ?? []
-      return fail('E4001', 'VALIDATION_FAILED', errors[0] ?? 'OpenAPI spec is invalid', {
-        suggestion: 'Fix the OpenAPI spec errors and try again',
-      })
+      return ok({ valid: false, errors, warnings: [] })
     }
     return ok({ valid: true, errors: [], warnings: [] })
   } catch (error) {

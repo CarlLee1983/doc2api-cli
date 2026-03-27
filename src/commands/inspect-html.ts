@@ -17,6 +17,7 @@ export interface InspectHtmlFlags {
   readonly maxPages: number
   readonly browser: boolean
   readonly outdir?: string
+  readonly allowPrivate?: boolean
 }
 
 async function readUrlList(filePath: string): Promise<Result<readonly string[]>> {
@@ -46,6 +47,7 @@ export async function runInspectHtml(
   let options: HtmlExtractOptions = {
     urls: [],
     forceBrowser: flags.browser,
+    allowPrivate: flags.allowPrivate,
   }
 
   if (flags.isUrlList) {
