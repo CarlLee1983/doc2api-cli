@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { ok, fail } from '../../src/output/result'
+import { fail, ok } from '../../src/output/result'
 
 describe('ok()', () => {
   test('wraps data in success result', () => {

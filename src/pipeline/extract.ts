@@ -1,8 +1,8 @@
 import { getDocumentProxy } from 'unpdf'
-import { ok, fail } from '../output/result'
-import type { Result } from '../types/result'
+import { checkPdfplumber, extractTables } from '../bridge/pdfplumber'
+import { fail, ok } from '../output/result'
 import type { Table } from '../types/chunk'
-import { extractTables, checkPdfplumber } from '../bridge/pdfplumber'
+import type { Result } from '../types/result'
 
 export interface RawPage {
   readonly pageNumber: number
@@ -75,9 +75,7 @@ export async function extractText(pdfPath: string): Promise<Result<ExtractResult
   }
 }
 
-async function tryExtractTables(
-  pdfPath: string,
-): Promise<ReadonlyMap<number, readonly Table[]>> {
+async function tryExtractTables(pdfPath: string): Promise<ReadonlyMap<number, readonly Table[]>> {
   const status = await checkPdfplumber()
   if (!status.python || !status.pdfplumber) {
     console.error('[doc2api] Warning: pdfplumber not available, table extraction disabled')

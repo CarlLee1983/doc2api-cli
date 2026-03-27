@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { normalizeUrl, filterLinks, type CrawlOptions } from '../../../src/pipeline/fetcher/crawler'
+import { type CrawlOptions, filterLinks, normalizeUrl } from '../../../src/pipeline/fetcher/crawler'
 
 describe('normalizeUrl', () => {
   test('removes fragment', () => {
@@ -24,15 +24,9 @@ describe('filterLinks', () => {
   }
 
   test('keeps same-domain links under entry path', () => {
-    const links = [
-      'https://example.com/docs/users',
-      'https://example.com/docs/orders',
-    ]
+    const links = ['https://example.com/docs/users', 'https://example.com/docs/orders']
     const result = filterLinks(links, baseOptions)
-    expect(result).toEqual([
-      'https://example.com/docs/users',
-      'https://example.com/docs/orders',
-    ])
+    expect(result).toEqual(['https://example.com/docs/users', 'https://example.com/docs/orders'])
   })
 
   test('excludes external links', () => {

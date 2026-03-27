@@ -1,7 +1,7 @@
-import type { Result } from '../types/result'
-import type { ValidateFlags } from '../types/config'
-import type { ValidationResult } from '../validators/openapi-validator'
 import { fail } from '../output/result'
+import type { ValidateFlags } from '../types/config'
+import type { Result } from '../types/result'
+import type { ValidationResult } from '../validators/openapi-validator'
 import { validateSpec } from '../validators/openapi-validator'
 
 export async function runValidate(

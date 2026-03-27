@@ -1,12 +1,12 @@
 import { basename } from 'node:path'
-import type { Result } from '../types/result'
-import type { Chunk, ChunkType, InspectData } from '../types/chunk'
-import type { InspectFlags } from '../types/config'
 import { ok } from '../output/result'
-import { extractText } from '../pipeline/extract'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
+import { extractText } from '../pipeline/extract'
+import type { Chunk, ChunkType, InspectData } from '../types/chunk'
 import { CHUNK_TYPES } from '../types/chunk'
+import type { InspectFlags } from '../types/config'
+import type { Result } from '../types/result'
 
 export async function runInspect(
   pdfPath: string,
@@ -37,17 +37,16 @@ export async function runInspect(
 }
 
 function countByType(chunks: readonly Chunk[]): Record<ChunkType, number> {
-  const initial = Object.fromEntries(
-    CHUNK_TYPES.map((type) => [type, 0]),
-  ) as Record<ChunkType, number>
+  const initial = Object.fromEntries(CHUNK_TYPES.map((type) => [type, 0])) as Record<
+    ChunkType,
+    number
+  >
 
-  return chunks.reduce(
-    (counts, chunk) => ({
-      ...counts,
-      [chunk.type]: counts[chunk.type] + 1,
-    }),
-    initial,
-  )
+  for (const chunk of chunks) {
+    initial[chunk.type] += 1
+  }
+
+  return initial
 }
 
 function detectLanguage(chunks: readonly Chunk[]): string {

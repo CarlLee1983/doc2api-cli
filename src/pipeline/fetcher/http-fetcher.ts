@@ -1,4 +1,4 @@
-import { ok, fail } from '../../output/result'
+import { fail, ok } from '../../output/result'
 import type { Result } from '../../types/result'
 
 export interface FetchResult {

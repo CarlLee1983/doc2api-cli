@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import { parseArgs } from 'node:util'
 import { resolve } from 'node:path'
+import { parseArgs } from 'node:util'
 import { validateFilePath, validatePages } from './bridge/pdfplumber'
+import { runAssemble } from './commands/assemble'
+import { runDoctor } from './commands/doctor'
 import { runInspect } from './commands/inspect'
 import { runInspectHtml } from './commands/inspect-html'
-import { runAssemble } from './commands/assemble'
 import { runValidate } from './commands/validate'
-import { runDoctor } from './commands/doctor'
 import { formatOutput } from './output/formatter'
 import { VERSION } from './version'
 
@@ -123,7 +123,7 @@ Flags:
     })
 
     if (result.ok && values.output) {
-      const outputPath = values.output!
+      const outputPath = values.output
       await Bun.write(resolve(outputPath), JSON.stringify(result.data.spec, null, 2))
       console.error(`Wrote OpenAPI spec to ${outputPath}`)
     }

@@ -1,5 +1,5 @@
-import type { RawPage } from './extract'
 import type { Table } from '../types/chunk'
+import type { RawPage } from './extract'
 
 export interface RawChunk {
   readonly id: string
@@ -45,7 +45,11 @@ export function chunkPages(pages: readonly RawPage[]): readonly RawChunk[] {
   return allChunks
 }
 
-function splitByHeadings(text: string, pageNumber: number, nextId: () => string): readonly RawChunk[] {
+function splitByHeadings(
+  text: string,
+  pageNumber: number,
+  nextId: () => string,
+): readonly RawChunk[] {
   const trimmed = text.trim()
   if (!trimmed) {
     return []

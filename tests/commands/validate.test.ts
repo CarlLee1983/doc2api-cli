@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { runValidate } from '../../src/commands/validate'
 import { resolve } from 'node:path'
+import { runValidate } from '../../src/commands/validate'
 
 const FIXTURE_DIR = resolve(import.meta.dir, '../fixtures')
 

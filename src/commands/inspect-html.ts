@@ -1,11 +1,11 @@
 import { basename, resolve } from 'node:path'
-import type { Result } from '../types/result'
-import type { Chunk, ChunkType, InspectData } from '../types/chunk'
-import { ok, fail } from '../output/result'
-import { extractHtml, type HtmlExtractOptions } from '../pipeline/extract-html'
+import { fail, ok } from '../output/result'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
+import { type HtmlExtractOptions, extractHtml } from '../pipeline/extract-html'
+import type { Chunk, ChunkType, InspectData } from '../types/chunk'
 import { CHUNK_TYPES } from '../types/chunk'
+import type { Result } from '../types/result'
 
 export interface InspectHtmlFlags {
   readonly json: boolean
@@ -64,9 +64,10 @@ export async function runInspectHtml(
   const rawChunks = chunkPages(rawPages)
   const chunks = classifyChunks(rawChunks)
 
-  const byType = Object.fromEntries(
-    CHUNK_TYPES.map((type) => [type, 0]),
-  ) as Record<ChunkType, number>
+  const byType = Object.fromEntries(CHUNK_TYPES.map((type) => [type, 0])) as Record<
+    ChunkType,
+    number
+  >
 
   for (const chunk of chunks) {
     byType[chunk.type] = byType[chunk.type] + 1

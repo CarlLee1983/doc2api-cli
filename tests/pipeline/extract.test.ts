@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { extractText } from '../../src/pipeline/extract'
 import { resolve } from 'node:path'
+import { extractText } from '../../src/pipeline/extract'
 
 const FIXTURE_DIR = resolve(import.meta.dir, '../fixtures')
 

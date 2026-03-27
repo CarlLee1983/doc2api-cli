@@ -1,9 +1,9 @@
 import * as cheerio from 'cheerio'
-import { ok, fail } from '../../output/result'
+import { fail, ok } from '../../output/result'
 import type { Result } from '../../types/result'
+import { checkPlaywright, fetchWithBrowser } from './browser-fetcher'
 import { fetchHtml } from './http-fetcher'
 import { detectSpa } from './spa-detector'
-import { checkPlaywright, fetchWithBrowser } from './browser-fetcher'
 
 export interface CrawlOptions {
   readonly entryUrl: string
@@ -117,9 +117,7 @@ export async function crawl(
 ): Promise<Result<CrawlResult>> {
   const visited = new Set<string>()
   const pages: FetchedPage[] = []
-  let queue: { url: string; depth: number }[] = [
-    { url: normalizeUrl(options.entryUrl), depth: 0 },
-  ]
+  let queue: { url: string; depth: number }[] = [{ url: normalizeUrl(options.entryUrl), depth: 0 }]
 
   while (queue.length > 0 && pages.length < options.maxPages) {
     const batch = queue.splice(0, options.concurrency)

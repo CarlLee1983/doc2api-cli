@@ -1,9 +1,9 @@
-import type { Result } from '../types/result'
-import type { AssembleInput } from '../types/endpoint'
-import type { AssembleFlags } from '../types/config'
 import type { OpenApiSpec } from '../assembler/openapi-builder'
-import { ok, fail } from '../output/result'
 import { buildOpenApiSpec } from '../assembler/openapi-builder'
+import { fail, ok } from '../output/result'
+import type { AssembleFlags } from '../types/config'
+import type { AssembleInput } from '../types/endpoint'
+import type { Result } from '../types/result'
 
 export interface AssembleData {
   readonly spec: OpenApiSpec

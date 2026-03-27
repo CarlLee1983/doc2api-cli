@@ -1,5 +1,5 @@
-import { ok } from '../output/result'
 import { checkPdfplumber } from '../bridge/pdfplumber'
+import { ok } from '../output/result'
 import { checkPlaywright } from '../pipeline/fetcher/browser-fetcher'
 import type { Result } from '../types/result'
 import { VERSION } from '../version'

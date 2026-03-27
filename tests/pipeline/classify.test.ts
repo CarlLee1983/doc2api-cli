@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { classifyChunks } from '../../src/pipeline/classify'
 import type { RawChunk } from '../../src/pipeline/chunk'
+import { classifyChunks } from '../../src/pipeline/classify'
 
 describe('classifyChunks()', () => {
   test('classifies endpoint definitions', () => {

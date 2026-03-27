@@ -3,13 +3,20 @@
   "servers": [{ "url": "https://api.example.com/v1" }],
   "endpoints": [
     {
-      "path": "/users", "method": "get", "summary": "List all users",
+      "path": "/users",
+      "method": "get",
+      "summary": "List all users",
       "responses": { "200": { "description": "Success", "example": [{ "id": 1, "name": "John" }] } }
     },
     {
-      "path": "/users", "method": "post", "summary": "Create a user",
+      "path": "/users",
+      "method": "post",
+      "summary": "Create a user",
       "requestBody": {
-        "properties": { "name": { "type": "string", "description": "User name" }, "email": { "type": "string", "description": "Email address" } },
+        "properties": {
+          "name": { "type": "string", "description": "User name" },
+          "email": { "type": "string", "description": "Email address" }
+        },
         "required": ["name", "email"]
       },
       "responses": { "201": { "description": "Created" } }
