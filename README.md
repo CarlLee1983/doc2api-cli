@@ -32,11 +32,7 @@ pdf2api validate spec.json
 
 This CLI is designed to work with AI Agents. The CLI handles PDF extraction and OpenAPI assembly — the Agent handles the semantic understanding in between.
 
-See `skills/` directory for ready-to-use skills:
-- `skills/claude.md` — Claude Code
-- `skills/gemini.md` — Gemini CLI
-- `skills/cursor.md` — Cursor
-- `skills/codex.md` — Codex
+See [`skills/SKILL.md`](skills/SKILL.md) for the universal AI Agent skill — works with Claude Code, Gemini CLI, Cursor, Codex, and any agent that supports skill files.
 
 ## Commands
 
