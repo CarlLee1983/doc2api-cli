@@ -10,7 +10,8 @@ export interface ValidationResult {
 
 export async function validateSpec(spec: unknown): Promise<Result<ValidationResult>> {
   try {
-    const result = await validate(structuredClone(spec) as Record<string, unknown>)
+    const specDoc = structuredClone(spec) as Parameters<typeof validate>[0]
+    const result = await validate(specDoc)
     if (!result.valid) {
       const errors = result.errors?.map((e: { message: string }) => e.message) ?? []
       return fail('E4001', 'VALIDATION_FAILED', errors[0] ?? 'OpenAPI spec is invalid', {

@@ -1,4 +1,4 @@
-import type { AppError, FailResult, Result, SuccessResult } from '../types/result'
+import type { AppError, FailResult, SuccessResult } from '../types/result'
 
 export function ok<T>(data: T): SuccessResult<T> {
   return { ok: true, data }

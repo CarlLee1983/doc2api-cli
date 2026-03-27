@@ -10,7 +10,7 @@ import { CHUNK_TYPES } from '../types/chunk'
 
 export async function runInspect(
   pdfPath: string,
-  flags: InspectFlags,
+  _flags: InspectFlags,
 ): Promise<Result<InspectData>> {
   const extractResult = await extractText(pdfPath)
 

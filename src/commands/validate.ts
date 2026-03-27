@@ -6,7 +6,7 @@ import { validateSpec } from '../validators/openapi-validator'
 
 export async function runValidate(
   specPath: string,
-  flags: ValidateFlags,
+  _flags: ValidateFlags,
 ): Promise<Result<ValidationResult>> {
   const file = Bun.file(specPath)
   if (!(await file.exists())) {
