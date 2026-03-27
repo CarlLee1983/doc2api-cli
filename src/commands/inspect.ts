@@ -37,17 +37,17 @@ export async function runInspect(
 }
 
 function countByType(chunks: readonly Chunk[]): Record<ChunkType, number> {
-  const counts = {} as Record<ChunkType, number>
+  const initial = Object.fromEntries(
+    CHUNK_TYPES.map((type) => [type, 0]),
+  ) as Record<ChunkType, number>
 
-  for (const type of CHUNK_TYPES) {
-    counts[type] = 0
-  }
-
-  for (const chunk of chunks) {
-    counts[chunk.type]++
-  }
-
-  return counts
+  return chunks.reduce(
+    (counts, chunk) => ({
+      ...counts,
+      [chunk.type]: counts[chunk.type] + 1,
+    }),
+    initial,
+  )
 }
 
 function detectLanguage(chunks: readonly Chunk[]): string {

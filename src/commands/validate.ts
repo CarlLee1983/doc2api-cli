@@ -22,7 +22,7 @@ export async function runValidate(
     spec = JSON.parse(rawContent)
   } catch {
     return fail('E4001', 'INVALID_FORMAT', 'File is not valid JSON', {
-      suggestion: 'Ensure the spec file contains valid JSON or YAML',
+      suggestion: 'Ensure the spec file contains valid JSON',
       context: { file: specPath },
     })
   }

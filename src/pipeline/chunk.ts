@@ -16,14 +16,20 @@ const HEADING_PATTERNS = [
   /(?:^|\s)(API\s+\w+)/i,
 ]
 
-let chunkCounter = 0
+function createIdGenerator(): () => string {
+  let counter = 0
+  return (): string => {
+    counter++
+    return `chunk-${String(counter).padStart(3, '0')}`
+  }
+}
 
 export function chunkPages(pages: readonly RawPage[]): readonly RawChunk[] {
-  chunkCounter = 0
+  const nextId = createIdGenerator()
   const allChunks: RawChunk[] = []
 
   for (const page of pages) {
-    const textChunks = splitByHeadings(page.text, page.pageNumber)
+    const textChunks = splitByHeadings(page.text, page.pageNumber, nextId)
     allChunks.push(...textChunks)
 
     for (const table of page.tables) {
@@ -39,7 +45,7 @@ export function chunkPages(pages: readonly RawPage[]): readonly RawChunk[] {
   return allChunks
 }
 
-function splitByHeadings(text: string, pageNumber: number): readonly RawChunk[] {
+function splitByHeadings(text: string, pageNumber: number, nextId: () => string): readonly RawChunk[] {
   const trimmed = text.trim()
   if (!trimmed) {
     return []
@@ -91,9 +97,4 @@ function formatTableAsText(table: Table): string {
   const header = table.headers.join(' | ')
   const rows = table.rows.map((r) => r.join(' | ')).join('\n')
   return `${header}\n${rows}`
-}
-
-function nextId(): string {
-  chunkCounter++
-  return `chunk-${String(chunkCounter).padStart(3, '0')}`
 }

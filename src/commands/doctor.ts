@@ -1,6 +1,7 @@
 import { ok } from '../output/result'
 import { checkPdfplumber } from '../bridge/pdfplumber'
 import type { Result } from '../types/result'
+import { VERSION } from '../version'
 
 interface Check {
   readonly name: string
@@ -14,8 +15,6 @@ interface DoctorData {
   readonly pdfplumber: boolean
   readonly checks: readonly Check[]
 }
-
-const VERSION = '0.1.0'
 
 export async function runDoctor(): Promise<Result<DoctorData>> {
   const checks: Check[] = []

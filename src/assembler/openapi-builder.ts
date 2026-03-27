@@ -4,8 +4,7 @@ export interface OpenApiSpec {
   readonly openapi: string
   readonly info: { readonly title: string; readonly version: string; readonly description?: string }
   readonly servers: readonly { readonly url: string; readonly description?: string }[]
-  // biome-ignore lint/suspicious/noExplicitAny: OpenAPI spec uses dynamic nested structures
-  readonly paths: Record<string, Record<string, any>>
+  readonly paths: Record<string, Record<string, unknown>>
   readonly components?: { readonly securitySchemes?: Record<string, unknown> }
 }
 

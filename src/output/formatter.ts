@@ -18,7 +18,7 @@ function formatHumanSuccess(data: unknown): string {
   }
 
   if (typeof data === 'object') {
-    const obj = data as Record<string, unknown>
+    const obj = data as Readonly<Record<string, unknown>>
     const lines: string[] = []
 
     for (const [key, value] of Object.entries(obj)) {

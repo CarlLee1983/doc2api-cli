@@ -30,25 +30,63 @@ export async function runAssemble(
     rawJson = await file.text()
   }
 
-  let input: AssembleInput
+  let parsed: unknown
   try {
-    input = JSON.parse(rawJson) as AssembleInput
+    parsed = JSON.parse(rawJson)
   } catch {
     return fail('E2001', 'INVALID_INPUT', 'Input is not valid JSON', {
       suggestion: 'Ensure the input file contains valid JSON matching the AssembleInput schema',
     })
   }
 
-  if (!input.info || !input.endpoints) {
-    return fail('E2002', 'MISSING_FIELDS', 'Input must contain "info" and "endpoints" fields', {
+  const validationError = validateAssembleInput(parsed)
+  if (validationError) {
+    return fail('E2002', 'MISSING_FIELDS', validationError, {
       suggestion: 'See pdf2api documentation for the expected input format',
     })
   }
+
+  const input = parsed as AssembleInput
 
   const spec = buildOpenApiSpec(input)
   const pathCount = Object.keys(spec.paths).length
 
   return ok({ spec, endpointCount: input.endpoints.length, pathCount })
+}
+
+function validateAssembleInput(data: unknown): string | null {
+  if (typeof data !== 'object' || data === null) {
+    return 'Input must be a JSON object'
+  }
+
+  const obj = data as Record<string, unknown>
+
+  if (!obj.info || typeof obj.info !== 'object') {
+    return 'Input must contain an "info" object'
+  }
+
+  const info = obj.info as Record<string, unknown>
+  if (typeof info.title !== 'string' || !info.title) {
+    return 'Input info must contain a non-empty "title" string'
+  }
+  if (typeof info.version !== 'string' || !info.version) {
+    return 'Input info must contain a non-empty "version" string'
+  }
+
+  if (!Array.isArray(obj.endpoints) || obj.endpoints.length === 0) {
+    return 'Input must contain a non-empty "endpoints" array'
+  }
+
+  for (const [i, ep] of (obj.endpoints as Record<string, unknown>[]).entries()) {
+    if (typeof ep.path !== 'string' || !ep.path) {
+      return `Endpoint [${i}] missing "path"`
+    }
+    if (typeof ep.method !== 'string' || !ep.method) {
+      return `Endpoint [${i}] missing "method"`
+    }
+  }
+
+  return null
 }
 
 async function readStdin(): Promise<string> {
