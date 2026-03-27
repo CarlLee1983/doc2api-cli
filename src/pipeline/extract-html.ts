@@ -1,11 +1,9 @@
 import { fail, ok } from '../output/result'
 import type { Result } from '../types/result'
 import type { ExtractResult, RawPage } from './extract'
-import { checkPlaywright, fetchWithBrowser } from './fetcher/browser-fetcher'
 import { crawl } from './fetcher/crawler'
 import type { CrawlOptions } from './fetcher/crawler'
-import { fetchHtml } from './fetcher/http-fetcher'
-import { detectSpa } from './fetcher/spa-detector'
+import { fetchPage } from './fetcher/fetch-page'
 import { detectFramework, selectParser } from './parser/detect'
 import { genericParser } from './parser/generic-parser'
 import { readmeParser } from './parser/readme-parser'
@@ -22,30 +20,6 @@ export interface HtmlExtractOptions {
 }
 
 const SPECIALIZED_PARSERS = [readmeParser] as const
-
-async function fetchPageHtml(
-  url: string,
-  forceBrowser: boolean,
-  allowPrivate = false,
-): Promise<Result<{ html: string; url: string }>> {
-  const fetchOpts = allowPrivate ? { allowPrivate } : undefined
-  if (forceBrowser) {
-    return fetchWithBrowser(url, fetchOpts)
-  }
-
-  const result = await fetchHtml(url, fetchOpts)
-  if (!result.ok) return result
-
-  if (detectSpa(result.data.html)) {
-    const hasPw = await checkPlaywright()
-    if (hasPw) {
-      return fetchWithBrowser(url, fetchOpts)
-    }
-    console.error('[doc2api] Warning: SPA detected but Playwright not installed, using static HTML')
-  }
-
-  return ok({ html: result.data.html, url: result.data.url })
-}
 
 function parseHtml(html: string, url: string, pageNumberOffset: number): readonly RawPage[] {
   const frameworkId = detectFramework(html)
@@ -86,7 +60,7 @@ export async function extractHtml(options: HtmlExtractOptions): Promise<Result<E
     }
   } else {
     for (const url of urls) {
-      const fetchResult = await fetchPageHtml(url, forceBrowser, allowPrivate)
+      const fetchResult = await fetchPage(url, { forceBrowser, allowPrivate })
       if (!fetchResult.ok) {
         console.error(`[doc2api] Warning: failed to fetch ${url}: ${fetchResult.error.message}`)
         continue

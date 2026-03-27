@@ -2,10 +2,11 @@ import { basename, resolve } from 'node:path'
 import { fail, ok } from '../output/result'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
+import { detectLanguage } from '../pipeline/detect-language'
 import { type HtmlExtractOptions, extractHtml } from '../pipeline/extract-html'
-import type { Chunk, ChunkType, InspectData } from '../types/chunk'
-import { CHUNK_TYPES } from '../types/chunk'
+import type { InspectData } from '../types/chunk'
 import type { Result } from '../types/result'
+import { countByType } from './inspect'
 
 export interface InspectHtmlFlags {
   readonly json: boolean
@@ -91,15 +92,6 @@ export async function runInspectHtml(
   const rawChunks = chunkPages(rawPages)
   const chunks = classifyChunks(rawChunks)
 
-  const byType = Object.fromEntries(CHUNK_TYPES.map((type) => [type, 0])) as Record<
-    ChunkType,
-    number
-  >
-
-  for (const chunk of chunks) {
-    byType[chunk.type] = byType[chunk.type] + 1
-  }
-
   const sourceName = flags.isUrlList ? basename(source) : source
 
   return ok({
@@ -109,19 +101,7 @@ export async function runInspectHtml(
     chunks,
     stats: {
       total_chunks: chunks.length,
-      by_type: byType,
+      by_type: countByType(chunks),
     },
   })
-}
-
-function detectLanguage(chunks: readonly Chunk[]): string {
-  const allText = chunks.map((c) => c.raw_text).join('')
-  const cjkPattern = /[\u4e00-\u9fff\u3400-\u4dbf]/g
-  const cjkMatches = allText.match(cjkPattern)
-
-  if (cjkMatches && cjkMatches.length > allText.length * 0.05) {
-    return 'zh-TW'
-  }
-
-  return 'en'
 }

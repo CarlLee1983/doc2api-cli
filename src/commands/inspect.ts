@@ -2,6 +2,7 @@ import { basename } from 'node:path'
 import { ok } from '../output/result'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
+import { detectLanguage } from '../pipeline/detect-language'
 import { extractText } from '../pipeline/extract'
 import type { Chunk, ChunkType, InspectData } from '../types/chunk'
 import { CHUNK_TYPES } from '../types/chunk'
@@ -36,27 +37,15 @@ export async function runInspect(
   })
 }
 
-function countByType(chunks: readonly Chunk[]): Record<ChunkType, number> {
-  const initial = Object.fromEntries(CHUNK_TYPES.map((type) => [type, 0])) as Record<
+export function countByType(chunks: readonly Chunk[]): Record<ChunkType, number> {
+  const counts = Object.fromEntries(CHUNK_TYPES.map((type) => [type, 0])) as Record<
     ChunkType,
     number
   >
 
   for (const chunk of chunks) {
-    initial[chunk.type] += 1
+    counts[chunk.type] += 1
   }
 
-  return initial
-}
-
-function detectLanguage(chunks: readonly Chunk[]): string {
-  const allText = chunks.map((c) => c.raw_text).join('')
-  const cjkPattern = /[\u4e00-\u9fff\u3400-\u4dbf]/g
-  const cjkMatches = allText.match(cjkPattern)
-
-  if (cjkMatches && cjkMatches.length > allText.length * 0.05) {
-    return 'zh-TW'
-  }
-
-  return 'en'
+  return counts
 }

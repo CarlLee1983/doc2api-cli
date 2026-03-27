@@ -1,9 +1,7 @@
 import * as cheerio from 'cheerio'
 import { fail, ok } from '../../output/result'
 import type { Result } from '../../types/result'
-import { checkPlaywright, fetchWithBrowser } from './browser-fetcher'
-import { fetchHtml } from './http-fetcher'
-import { detectSpa } from './spa-detector'
+import { fetchPage } from './fetch-page'
 
 export interface CrawlOptions {
   readonly entryUrl: string
@@ -86,34 +84,6 @@ function extractLinks(html: string, baseUrl: string): readonly string[] {
   return links
 }
 
-async function fetchPage(
-  url: string,
-  forceBrowser: boolean,
-  allowPrivate = false,
-): Promise<Result<{ html: string; url: string }>> {
-  const fetchOpts = allowPrivate ? { allowPrivate } : undefined
-  if (forceBrowser) {
-    return fetchWithBrowser(url, fetchOpts)
-  }
-
-  const result = await fetchHtml(url, fetchOpts)
-  if (!result.ok) return result
-
-  if (detectSpa(result.data.html)) {
-    const hasPw = await checkPlaywright()
-    if (!hasPw) {
-      // Graceful degradation — use static HTML (consistent with pdfplumber pattern)
-      console.error(
-        `[doc2api] Warning: SPA detected but Playwright not installed, using static HTML for ${url}`,
-      )
-      return ok({ html: result.data.html, url: result.data.url })
-    }
-    return fetchWithBrowser(url, fetchOpts)
-  }
-
-  return ok({ html: result.data.html, url: result.data.url })
-}
-
 export async function crawl(
   options: CrawlOptions,
   forceBrowser = false,
@@ -124,7 +94,8 @@ export async function crawl(
   let queue: { url: string; depth: number }[] = [{ url: normalizeUrl(options.entryUrl), depth: 0 }]
 
   while (queue.length > 0 && pages.length < options.maxPages) {
-    const batch = queue.splice(0, options.concurrency)
+    const batch = queue.slice(0, options.concurrency)
+    queue = queue.slice(options.concurrency)
     const results = await Promise.allSettled(
       batch
         .filter((item) => {
@@ -134,7 +105,7 @@ export async function crawl(
           return true
         })
         .map(async (item) => {
-          const result = await fetchPage(item.url, forceBrowser, allowPrivate)
+          const result = await fetchPage(item.url, { forceBrowser, allowPrivate })
           return { ...item, result }
         }),
     )

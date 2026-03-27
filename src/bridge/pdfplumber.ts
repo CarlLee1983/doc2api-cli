@@ -56,7 +56,7 @@ export function validateFilePath(filePath: string): string | null {
   if (filePath.includes('\0')) {
     return 'Invalid file path: contains null bytes'
   }
-  if (filePath.includes('..')) {
+  if (filePath.split(/[/\\]/).some((segment) => segment === '..')) {
     return 'Invalid file path: path traversal not allowed'
   }
   return null
