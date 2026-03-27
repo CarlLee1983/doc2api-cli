@@ -2,3 +2,24 @@ node_modules/
 dist/
 *.tgz
 .DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Coverage
+coverage/
