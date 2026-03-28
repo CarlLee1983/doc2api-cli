@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { extractEndpoint, extractParameters } from '../../src/pipeline/extractors'
+import { extractEndpoint, extractParameters, extractResponse } from '../../src/pipeline/extractors'
 
 describe('extractEndpoint()', () => {
   test('extracts method and path from simple endpoint', () => {
@@ -93,6 +93,49 @@ describe('extractParameters()', () => {
 
   test('returns null when no table', () => {
     const result = extractParameters('some text', null)
+    expect(result).toBeNull()
+  })
+})
+
+describe('extractResponse()', () => {
+  test('extracts status code and JSON body', () => {
+    const result = extractResponse(
+      'Response: 200\n{ "id": "123", "name": "test" }',
+      null,
+    )
+    expect(result).toEqual({
+      kind: 'response',
+      statusCode: 200,
+      body: '{ "id": "123", "name": "test" }',
+    })
+  })
+
+  test('extracts JSON body without status code', () => {
+    const result = extractResponse(
+      '{ "code": 0, "data": { "token": "abc" } }',
+      null,
+    )
+    expect(result).toEqual({
+      kind: 'response',
+      statusCode: null,
+      body: '{ "code": 0, "data": { "token": "abc" } }',
+    })
+  })
+
+  test('extracts status code from text pattern', () => {
+    const result = extractResponse(
+      'HTTP 201 Created\n{"id": "new-item"}',
+      null,
+    )
+    expect(result).toEqual({
+      kind: 'response',
+      statusCode: 201,
+      body: '{"id": "new-item"}',
+    })
+  })
+
+  test('returns null when no JSON found', () => {
+    const result = extractResponse('No JSON here', null)
     expect(result).toBeNull()
   })
 })

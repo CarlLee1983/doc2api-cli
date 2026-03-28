@@ -69,3 +69,23 @@ export function extractParameters(
 
   return { kind: 'parameter', parameters }
 }
+
+const STATUS_CODE_PATTERN = /\b(?:HTTP\s+|status\s+)?([1-5]\d{2})\b/i
+const JSON_BODY_PATTERN = /(\{[\s\S]*\}|\[[\s\S]*\])/
+
+export function extractResponse(
+  rawText: string,
+  _table: Table | null,
+): ResponseContent | null {
+  const jsonMatch = rawText.match(JSON_BODY_PATTERN)
+  if (!jsonMatch) return null
+
+  const statusMatch = rawText.match(STATUS_CODE_PATTERN)
+  const statusCode = statusMatch ? Number.parseInt(statusMatch[1], 10) : null
+
+  return {
+    kind: 'response',
+    statusCode,
+    body: jsonMatch[1].trim(),
+  }
+}
