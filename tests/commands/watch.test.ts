@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from 'bun:test'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { runWatch, type WatchHandle } from '../../src/commands/watch'
+import { type WatchHandle, runWatch } from '../../src/commands/watch'
 
 describe('runWatch()', () => {
   let tempDir: string

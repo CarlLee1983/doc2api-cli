@@ -23,11 +23,7 @@ const contextRules: readonly ContextRule[] = [
   {
     // JSON block following an endpoint → response_example
     apply: (chunk, prev) => {
-      if (
-        chunk.type !== 'general_text' ||
-        !prev ||
-        prev.type !== 'endpoint_definition'
-      ) {
+      if (chunk.type !== 'general_text' || !prev || prev.type !== 'endpoint_definition') {
         return null
       }
       if (!JSON_BLOCK_PATTERN.test(chunk.raw_text)) return null
@@ -51,11 +47,7 @@ const contextRules: readonly ContextRule[] = [
   {
     // Auth keyword following auth_description → extend auth
     apply: (chunk, prev) => {
-      if (
-        chunk.type !== 'general_text' ||
-        !prev ||
-        prev.type !== 'auth_description'
-      ) {
+      if (chunk.type !== 'general_text' || !prev || prev.type !== 'auth_description') {
         return null
       }
       if (!AUTH_EXTEND_PATTERN.test(chunk.raw_text)) return null
@@ -86,9 +78,7 @@ function reExtractContent(
   return null
 }
 
-export function contextRefine(
-  chunks: readonly Chunk[],
-): readonly Chunk[] {
+export function contextRefine(chunks: readonly Chunk[]): readonly Chunk[] {
   return chunks.map((chunk, i) => {
     const prev = i > 0 ? chunks[i - 1] : null
     const next = i < chunks.length - 1 ? chunks[i + 1] : null

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import type { Chunk } from '../../src/types/chunk'
 import { contextRefine } from '../../src/pipeline/context-refine'
+import type { Chunk } from '../../src/types/chunk'
 
 describe('contextRefine()', () => {
   test('promotes JSON block after endpoint to response_example', () => {
@@ -54,7 +54,10 @@ describe('contextRefine()', () => {
         raw_text: 'amount | number\ncurrency | string',
         table: {
           headers: ['field', 'type'],
-          rows: [['amount', 'number'], ['currency', 'string']],
+          rows: [
+            ['amount', 'number'],
+            ['currency', 'string'],
+          ],
         },
       },
     ]
@@ -71,7 +74,12 @@ describe('contextRefine()', () => {
         page: 1,
         type: 'auth_description',
         confidence: 0.85,
-        content: { kind: 'auth', scheme: 'bearer', location: 'header', description: 'Use Bearer token' },
+        content: {
+          kind: 'auth',
+          scheme: 'bearer',
+          location: 'header',
+          description: 'Use Bearer token',
+        },
         raw_text: 'Use Bearer token in Authorization header',
         table: null,
       },
@@ -143,7 +151,10 @@ describe('contextRefine()', () => {
         page: 1,
         type: 'parameter_table',
         confidence: 0.85,
-        content: { kind: 'parameter', parameters: [{ name: 'page', type: 'number', required: false, description: null }] },
+        content: {
+          kind: 'parameter',
+          parameters: [{ name: 'page', type: 'number', required: false, description: null }],
+        },
         raw_text: 'page | number',
         table: { headers: ['Name', 'Type'], rows: [['page', 'number']] },
       },

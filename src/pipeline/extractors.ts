@@ -7,13 +7,9 @@ import type {
   Table,
 } from '../types/chunk'
 
-const ENDPOINT_PATTERN =
-  /\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(\/[a-zA-Z0-9_\-\/{}.]+)/i
+const ENDPOINT_PATTERN = /\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(\/[a-zA-Z0-9_\-\/{}.]+)/i
 
-export function extractEndpoint(
-  rawText: string,
-  _table: Table | null,
-): EndpointContent | null {
+export function extractEndpoint(rawText: string, _table: Table | null): EndpointContent | null {
   const match = rawText.match(ENDPOINT_PATTERN)
   if (!match) return null
 
@@ -28,7 +24,11 @@ export function extractEndpoint(
 
   let summary: string | null = null
   if (after.startsWith('-') || after.startsWith('—')) {
-    summary = after.replace(/^[-—]\s*/, '').split('\n')[0].trim() || null
+    summary =
+      after
+        .replace(/^[-—]\s*/, '')
+        .split('\n')[0]
+        .trim() || null
   } else if (before && !ENDPOINT_PATTERN.test(before)) {
     summary = before.split('\n').pop()?.trim() || null
   }
@@ -46,10 +46,7 @@ function findColumnIndex(headers: readonly string[], pattern: RegExp): number {
   return headers.findIndex((h) => pattern.test(h.trim()))
 }
 
-export function extractParameters(
-  _rawText: string,
-  table: Table | null,
-): ParameterContent | null {
+export function extractParameters(_rawText: string, table: Table | null): ParameterContent | null {
   if (!table || table.rows.length === 0) return null
 
   const nameIdx = findColumnIndex(table.headers, NAME_HEADERS)
@@ -61,9 +58,9 @@ export function extractParameters(
 
   const parameters = table.rows.map((row) => ({
     name: row[nameIdx]?.trim() ?? '',
-    type: typeIdx >= 0 ? (row[typeIdx]?.trim() || null) : null,
+    type: typeIdx >= 0 ? row[typeIdx]?.trim() || null : null,
     required: reqIdx >= 0 ? TRUTHY_VALUES.test(row[reqIdx]?.trim() ?? '') : null,
-    description: descIdx >= 0 ? (row[descIdx]?.trim() || null) : null,
+    description: descIdx >= 0 ? row[descIdx]?.trim() || null : null,
   }))
 
   return { kind: 'parameter', parameters }
@@ -76,10 +73,7 @@ const JWT_PATTERN = /\bjwt\b/i
 const HEADER_LOCATION = /\bheader\b|\bAuthorization\b/
 const QUERY_LOCATION = /\b(query\s+param|query\s+string|\?.*=)/i
 
-export function extractAuth(
-  rawText: string,
-  _table: Table | null,
-): AuthContent | null {
+export function extractAuth(rawText: string, _table: Table | null): AuthContent | null {
   let scheme: string | null = null
 
   if (BEARER_PATTERN.test(rawText)) {
@@ -106,15 +100,10 @@ export function extractAuth(
 
 const STATUS_COL_PATTERN = /^[1-5]\d{2}$/
 
-export function extractErrorCodes(
-  _rawText: string,
-  table: Table | null,
-): ErrorCodesContent | null {
+export function extractErrorCodes(_rawText: string, table: Table | null): ErrorCodesContent | null {
   if (!table || table.rows.length === 0) return null
 
-  const statusIdx = table.rows[0].findIndex((cell) =>
-    STATUS_COL_PATTERN.test(cell.trim()),
-  )
+  const statusIdx = table.rows[0].findIndex((cell) => STATUS_COL_PATTERN.test(cell.trim()))
   if (statusIdx === -1) return null
 
   const messageIdx = statusIdx === 0 ? 1 : 0
@@ -123,7 +112,7 @@ export function extractErrorCodes(
     .filter((row) => STATUS_COL_PATTERN.test(row[statusIdx]?.trim() ?? ''))
     .map((row) => ({
       status: Number.parseInt(row[statusIdx].trim(), 10),
-      message: messageIdx < row.length ? (row[messageIdx]?.trim() || null) : null,
+      message: messageIdx < row.length ? row[messageIdx]?.trim() || null : null,
     }))
 
   if (codes.length === 0) return null
@@ -134,10 +123,7 @@ export function extractErrorCodes(
 const STATUS_CODE_PATTERN = /\b(?:HTTP\s+|status\s+)?([1-5]\d{2})\b/i
 const JSON_BODY_PATTERN = /(\{[\s\S]*\}|\[[\s\S]*\])/
 
-export function extractResponse(
-  rawText: string,
-  _table: Table | null,
-): ResponseContent | null {
+export function extractResponse(rawText: string, _table: Table | null): ResponseContent | null {
   const jsonMatch = rawText.match(JSON_BODY_PATTERN)
   if (!jsonMatch) return null
 

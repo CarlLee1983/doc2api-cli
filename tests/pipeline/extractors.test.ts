@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'bun:test'
-import { extractAuth, extractEndpoint, extractErrorCodes, extractParameters, extractResponse } from '../../src/pipeline/extractors'
+import {
+  extractAuth,
+  extractEndpoint,
+  extractErrorCodes,
+  extractParameters,
+  extractResponse,
+} from '../../src/pipeline/extractors'
 
 describe('extractEndpoint()', () => {
   test('extracts method and path from simple endpoint', () => {
@@ -13,10 +19,7 @@ describe('extractEndpoint()', () => {
   })
 
   test('extracts method, path and summary', () => {
-    const result = extractEndpoint(
-      'GET /users/{id} - Retrieve a single user by ID',
-      null,
-    )
+    const result = extractEndpoint('GET /users/{id} - Retrieve a single user by ID', null)
     expect(result).toEqual({
       kind: 'endpoint',
       method: 'GET',
@@ -26,10 +29,7 @@ describe('extractEndpoint()', () => {
   })
 
   test('extracts summary from text before endpoint', () => {
-    const result = extractEndpoint(
-      'Create a new order\nPOST /api/orders',
-      null,
-    )
+    const result = extractEndpoint('Create a new order\nPOST /api/orders', null)
     expect(result).toEqual({
       kind: 'endpoint',
       method: 'POST',
@@ -71,9 +71,7 @@ describe('extractParameters()', () => {
     const result = extractParameters('', table)
     expect(result).toEqual({
       kind: 'parameter',
-      parameters: [
-        { name: 'user_id', type: 'string', required: true, description: '使用者 ID' },
-      ],
+      parameters: [{ name: 'user_id', type: 'string', required: true, description: '使用者 ID' }],
     })
   })
 
@@ -85,9 +83,7 @@ describe('extractParameters()', () => {
     const result = extractParameters('', table)
     expect(result).toEqual({
       kind: 'parameter',
-      parameters: [
-        { name: 'id', type: 'string', required: null, description: null },
-      ],
+      parameters: [{ name: 'id', type: 'string', required: null, description: null }],
     })
   })
 
@@ -99,10 +95,7 @@ describe('extractParameters()', () => {
 
 describe('extractResponse()', () => {
   test('extracts status code and JSON body', () => {
-    const result = extractResponse(
-      'Response: 200\n{ "id": "123", "name": "test" }',
-      null,
-    )
+    const result = extractResponse('Response: 200\n{ "id": "123", "name": "test" }', null)
     expect(result).toEqual({
       kind: 'response',
       statusCode: 200,
@@ -111,10 +104,7 @@ describe('extractResponse()', () => {
   })
 
   test('extracts JSON body without status code', () => {
-    const result = extractResponse(
-      '{ "code": 0, "data": { "token": "abc" } }',
-      null,
-    )
+    const result = extractResponse('{ "code": 0, "data": { "token": "abc" } }', null)
     expect(result).toEqual({
       kind: 'response',
       statusCode: null,
@@ -123,10 +113,7 @@ describe('extractResponse()', () => {
   })
 
   test('extracts status code from text pattern', () => {
-    const result = extractResponse(
-      'HTTP 201 Created\n{"id": "new-item"}',
-      null,
-    )
+    const result = extractResponse('HTTP 201 Created\n{"id": "new-item"}', null)
     expect(result).toEqual({
       kind: 'response',
       statusCode: 201,
@@ -142,10 +129,7 @@ describe('extractResponse()', () => {
 
 describe('extractAuth()', () => {
   test('extracts bearer token auth', () => {
-    const result = extractAuth(
-      'Authentication: Use Bearer token in Authorization header',
-      null,
-    )
+    const result = extractAuth('Authentication: Use Bearer token in Authorization header', null)
     expect(result).toEqual({
       kind: 'auth',
       scheme: 'bearer',
@@ -155,10 +139,7 @@ describe('extractAuth()', () => {
   })
 
   test('extracts API key auth', () => {
-    const result = extractAuth(
-      'Pass your API key in the X-API-Key header',
-      null,
-    )
+    const result = extractAuth('Pass your API key in the X-API-Key header', null)
     expect(result).toEqual({
       kind: 'auth',
       scheme: 'apiKey',
@@ -168,10 +149,7 @@ describe('extractAuth()', () => {
   })
 
   test('extracts OAuth2', () => {
-    const result = extractAuth(
-      'This API uses OAuth 2.0 for authorization',
-      null,
-    )
+    const result = extractAuth('This API uses OAuth 2.0 for authorization', null)
     expect(result).toEqual({
       kind: 'auth',
       scheme: 'oauth2',

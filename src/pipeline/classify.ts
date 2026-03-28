@@ -110,10 +110,7 @@ export function classifyChunks(rawChunks: readonly RawChunk[]): readonly Chunk[]
   })
 }
 
-export function extractContent(
-  chunk: RawChunk,
-  type: ChunkType,
-): ChunkContent | null {
+export function extractContent(chunk: RawChunk, type: ChunkType): ChunkContent | null {
   if (type === 'endpoint_definition') {
     return extractEndpoint(chunk.raw_text, chunk.table)
   }
