@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test'
+import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
+import { join } from 'node:path'
 import { runAssemble } from '../../src/commands/assemble'
 import { runValidate } from '../../src/commands/validate'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 
 const FIXTURE_DIR = resolve(import.meta.dir, '../fixtures')
 
