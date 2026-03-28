@@ -1,25 +1,43 @@
 {
-  "info": { "title": "Sample API", "version": "1.0.0", "description": "A sample API for testing" },
+  "info": {
+    "title": "Sample API",
+    "version": "1.0.0",
+    "description": "A sample API for E2E testing"
+  },
   "servers": [{ "url": "https://api.example.com/v1" }],
   "endpoints": [
     {
       "path": "/users",
       "method": "get",
-      "summary": "List all users",
-      "responses": { "200": { "description": "Success", "example": [{ "id": 1, "name": "John" }] } }
+      "summary": "List users",
+      "parameters": [
+        { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer" } }
+      ],
+      "responses": {
+        "200": { "description": "Success", "example": [{ "id": "1", "name": "Alice" }] }
+      },
+      "tags": ["users"]
     },
     {
       "path": "/users",
       "method": "post",
-      "summary": "Create a user",
+      "summary": "Create user",
       "requestBody": {
         "properties": {
           "name": { "type": "string", "description": "User name" },
-          "email": { "type": "string", "description": "Email address" }
+          "email": { "type": "string", "description": "User email" }
         },
         "required": ["name", "email"]
       },
-      "responses": { "201": { "description": "Created" } }
+      "responses": {
+        "201": { "description": "Created", "example": { "id": "2", "name": "Bob" } },
+        "400": { "description": "Bad request" }
+      },
+      "tags": ["users"],
+      "security": [{ "bearerAuth": [] }]
     }
-  ]
+  ],
+  "securitySchemes": {
+    "bearerAuth": { "type": "http", "scheme": "bearer" }
+  }
 }
