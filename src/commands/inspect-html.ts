@@ -3,6 +3,7 @@ import { warn } from '../output/logger'
 import { fail, ok } from '../output/result'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
+import { contextRefine } from '../pipeline/context-refine'
 import { detectLanguage } from '../pipeline/detect-language'
 import { type HtmlExtractOptions, extractHtml } from '../pipeline/extract-html'
 import type { InspectData } from '../types/chunk'
@@ -93,7 +94,8 @@ export async function runInspectHtml(
 
   const { pages, rawPages } = extractResult.data
   const rawChunks = chunkPages(rawPages)
-  const chunks = classifyChunks(rawChunks)
+  const classified = classifyChunks(rawChunks)
+  const chunks = contextRefine(classified)
 
   const sourceName = flags.isUrlList ? basename(source) : source
 
