@@ -155,6 +155,44 @@ All commands return structured errors in `--json` mode with `code`, `type`, `mes
 | E5003 | CRAWL_FAILED | All crawled pages failed to fetch |
 | E5005 | NO_CONTENT / NO_URLS / NO_PAGES | No usable content extracted |
 
+## Programmatic API
+
+Use doc2api as a library in your Bun/TypeScript project:
+
+```bash
+bun add @carllee1983/doc2api
+```
+
+```typescript
+import {
+  extractText, chunkPages, classifyChunks, contextRefine,
+  buildOpenApiSpec, collectStream, streamPipeline,
+  ok, fail,
+} from '@carllee1983/doc2api'
+import type { Chunk, AssembleInput, Result } from '@carllee1983/doc2api'
+
+// Batch: extract → chunk → classify → refine
+const extracted = await extractText('./api-docs.pdf')
+if (!extracted.ok) throw new Error(extracted.error.message)
+
+const chunks = chunkPages(extracted.data.rawPages)
+const classified = classifyChunks(chunks)
+const refined = contextRefine(classified)
+
+// Or streaming (memory-efficient for large documents):
+const chunks = await collectStream(streamPipeline('./api-docs.pdf'))
+
+// After AI Agent analyzes chunks and builds AssembleInput:
+const spec = buildOpenApiSpec(assembleInput)
+```
+
+## Security
+
+- **SSRF protection**: Private/internal IPs blocked (10.x, 172.16-31.x, 192.168.x, CGN 100.64-127.x, localhost, link-local)
+- **Input validation**: File paths reject null bytes, `..` traversal, and flag injection (`-` prefix)
+- **File size limits**: 100MB PDF, 10MB HTTP response, 50MB stdin
+- **No arbitrary code execution**: Python bridge communicates via JSON over stdout only
+
 ## Architecture
 
 ```
