@@ -5,6 +5,7 @@
 - [Bun](https://bun.sh) v1.0+
 - Node.js 18+ (for compatibility)
 - Python 3.8+ with `pdfplumber` (optional, for table extraction)
+- [Playwright](https://playwright.dev) (optional, for SPA rendering): `bunx playwright install chromium`
 
 ## Setup
 
@@ -44,16 +45,27 @@ Examples:
 
 ```
 src/
-  pipeline/       # PDF extraction and chunking
-  assembler/      # OpenAPI spec generation
-  bridge/         # Python pdfplumber bridge
-  commands/       # CLI command handlers
-  output/         # Result formatting
-  types/          # TypeScript type definitions
-  validators/     # OpenAPI validation
-tests/            # Mirror of src/ structure
-bridge/           # Python bridge script
-skills/           # AI Agent integration skills
+  pipeline/           # Core extraction and processing pipeline
+    fetcher/          # HTTP/browser fetching, crawling, retry, robots.txt
+    parser/           # HTML parsing (generic + framework-specific)
+    extract.ts        # PDF text extraction (batch + streaming)
+    extract-html.ts   # HTML extraction orchestrator
+    chunk.ts          # Content chunking with auto-split
+    classify.ts       # Rule-based chunk classification
+    context-refine.ts # Neighbor-aware classification refinement
+    detect-language.ts # CJK language detection
+    extractors.ts     # Content extractors (endpoint, params, auth, etc.)
+    stream.ts         # Streaming pipeline composer
+  assembler/          # OpenAPI spec generation
+  bridge/             # Python pdfplumber bridge
+  commands/           # CLI command handlers (inspect, watch, assemble, etc.)
+  output/             # Result formatting and logging
+  types/              # TypeScript type definitions
+  validators/         # OpenAPI validation
+  watcher.ts          # File system watcher for watch mode
+tests/                # Mirror of src/ structure
+bridge/               # Python bridge script
+skills/               # AI Agent integration skills
 ```
 
 ## Code Standards
@@ -63,6 +75,9 @@ skills/           # AI Agent integration skills
 - Use the `Result<T>` type for all fallible operations
 - Validate all user input at system boundaries
 - No `console.log` in library code
+- Chunk splitting at 8000 chars for LLM compatibility
+- Streaming patterns use `async function*` generators
+- Retry and checkpoint patterns for network resilience
 
 ## Reporting Issues
 
