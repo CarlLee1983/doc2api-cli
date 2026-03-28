@@ -36,3 +36,36 @@ export function extractEndpoint(
 
   return { kind: 'endpoint', method, path, summary }
 }
+
+const NAME_HEADERS = /^(name|parameter|參數|field|欄位)$/i
+const TYPE_HEADERS = /^(type|型別|data\s*type|類型)$/i
+const REQUIRED_HEADERS = /^(required|必填|必要)$/i
+const DESC_HEADERS = /^(description|說明|描述|備註|detail)$/i
+const TRUTHY_VALUES = /^(yes|true|是|required|必填|✓|v)$/i
+
+function findColumnIndex(headers: readonly string[], pattern: RegExp): number {
+  return headers.findIndex((h) => pattern.test(h.trim()))
+}
+
+export function extractParameters(
+  _rawText: string,
+  table: Table | null,
+): ParameterContent | null {
+  if (!table || table.rows.length === 0) return null
+
+  const nameIdx = findColumnIndex(table.headers, NAME_HEADERS)
+  if (nameIdx === -1) return null
+
+  const typeIdx = findColumnIndex(table.headers, TYPE_HEADERS)
+  const reqIdx = findColumnIndex(table.headers, REQUIRED_HEADERS)
+  const descIdx = findColumnIndex(table.headers, DESC_HEADERS)
+
+  const parameters = table.rows.map((row) => ({
+    name: row[nameIdx]?.trim() ?? '',
+    type: typeIdx >= 0 ? (row[typeIdx]?.trim() || null) : null,
+    required: reqIdx >= 0 ? TRUTHY_VALUES.test(row[reqIdx]?.trim() ?? '') : null,
+    description: descIdx >= 0 ? (row[descIdx]?.trim() || null) : null,
+  }))
+
+  return { kind: 'parameter', parameters }
+}

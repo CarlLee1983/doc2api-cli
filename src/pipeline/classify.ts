@@ -1,6 +1,6 @@
 import type { Chunk, ChunkContent, ChunkType } from '../types/chunk'
 import type { RawChunk } from './chunk'
-import { extractEndpoint } from './extractors'
+import { extractEndpoint, extractParameters } from './extractors'
 
 interface ClassifyRule {
   readonly type: ChunkType
@@ -110,6 +110,10 @@ export function extractContent(
 ): ChunkContent | null {
   if (type === 'endpoint_definition') {
     return extractEndpoint(chunk.raw_text, chunk.table)
+  }
+
+  if (type === 'parameter_table') {
+    return extractParameters(chunk.raw_text, chunk.table)
   }
 
   return null
