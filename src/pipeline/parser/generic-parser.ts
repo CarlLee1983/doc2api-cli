@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import type { AnyNode } from 'domhandler'
 import type { Table } from '../../types/chunk'
 import type { RawPage } from '../extract'
 import type { HtmlParser } from './types'
@@ -17,7 +18,7 @@ const NOISE_SELECTORS = [
 
 const HEADING_SELECTOR = 'h1, h2, h3, h4, h5, h6'
 
-function extractSingleTable($: cheerio.CheerioAPI, tableEl: cheerio.AnyNode): Table {
+function extractSingleTable($: cheerio.CheerioAPI, tableEl: AnyNode): Table {
   const headers: string[] = []
   const rows: string[][] = []
 
@@ -68,10 +69,7 @@ function extractSingleTable($: cheerio.CheerioAPI, tableEl: cheerio.AnyNode): Ta
   return { headers, rows }
 }
 
-function extractTablesFromElement(
-  $: cheerio.CheerioAPI,
-  el: cheerio.AnyNode,
-): readonly Table[] {
+function extractTablesFromElement($: cheerio.CheerioAPI, el: AnyNode): readonly Table[] {
   const tables: Table[] = []
 
   // If the element itself is a table, extract it directly
@@ -89,7 +87,7 @@ function extractTablesFromElement(
   return tables
 }
 
-function elementText($: cheerio.CheerioAPI, el: cheerio.AnyNode): string {
+function elementText($: cheerio.CheerioAPI, el: AnyNode): string {
   return $(el).text().replace(/\s+/g, ' ').trim()
 }
 
@@ -128,7 +126,7 @@ export const genericParser: HtmlParser = {
 
       // Collect sibling elements between this heading and the next heading
       const contentParts: string[] = [headingText]
-      const sectionTables: Array<cheerio.AnyNode> = []
+      const sectionTables: Array<AnyNode> = []
 
       let $sibling = $heading.next()
       while ($sibling.length > 0 && !$sibling.is(HEADING_SELECTOR)) {

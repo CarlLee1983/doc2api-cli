@@ -1,6 +1,6 @@
 {
   "name": "@carllee1983/doc2api",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "Convert API documentation (PDF, HTML) to OpenAPI 3.x specs — AI Agent collaboration tool",
   "type": "module",
   "bin": {
@@ -10,12 +10,7 @@
     ".": "./dist/lib.js",
     "./cli": "./dist/index.js"
   },
-  "files": [
-    "dist/",
-    "bridge/",
-    "LICENSE",
-    "README.md"
-  ],
+  "files": ["dist/", "bridge/", "LICENSE", "README.md"],
   "engines": {
     "bun": ">=1.0"
   },
