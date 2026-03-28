@@ -6,17 +6,39 @@
   "bin": {
     "doc2api": "./dist/index.js"
   },
+  "exports": {
+    ".": "./dist/lib.js",
+    "./cli": "./dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "bridge/",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "bun": ">=1.0"
+  },
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target bun --format esm",
+    "build": "bun build src/index.ts src/lib.ts --outdir dist --target bun --format esm",
     "dev": "bun run src/index.ts",
     "test": "bun test",
     "check": "biome check .",
     "check:fix": "biome check --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
   },
   "keywords": ["pdf", "html", "openapi", "api-docs", "cli", "ai-agent"],
   "author": "Carl Lee",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anthropics/doc2api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anthropics/doc2api/issues"
+  },
+  "homepage": "https://github.com/anthropics/doc2api#readme",
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
     "typescript": "^5.7.0",
