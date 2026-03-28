@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { extractEndpoint, extractParameters, extractResponse } from '../../src/pipeline/extractors'
+import { extractAuth, extractEndpoint, extractErrorCodes, extractParameters, extractResponse } from '../../src/pipeline/extractors'
 
 describe('extractEndpoint()', () => {
   test('extracts method and path from simple endpoint', () => {
@@ -136,6 +136,97 @@ describe('extractResponse()', () => {
 
   test('returns null when no JSON found', () => {
     const result = extractResponse('No JSON here', null)
+    expect(result).toBeNull()
+  })
+})
+
+describe('extractAuth()', () => {
+  test('extracts bearer token auth', () => {
+    const result = extractAuth(
+      'Authentication: Use Bearer token in Authorization header',
+      null,
+    )
+    expect(result).toEqual({
+      kind: 'auth',
+      scheme: 'bearer',
+      location: 'header',
+      description: 'Authentication: Use Bearer token in Authorization header',
+    })
+  })
+
+  test('extracts API key auth', () => {
+    const result = extractAuth(
+      'Pass your API key in the X-API-Key header',
+      null,
+    )
+    expect(result).toEqual({
+      kind: 'auth',
+      scheme: 'apiKey',
+      location: 'header',
+      description: 'Pass your API key in the X-API-Key header',
+    })
+  })
+
+  test('extracts OAuth2', () => {
+    const result = extractAuth(
+      'This API uses OAuth 2.0 for authorization',
+      null,
+    )
+    expect(result).toEqual({
+      kind: 'auth',
+      scheme: 'oauth2',
+      location: null,
+      description: 'This API uses OAuth 2.0 for authorization',
+    })
+  })
+
+  test('returns null when no auth pattern found', () => {
+    const result = extractAuth('Regular documentation text', null)
+    expect(result).toBeNull()
+  })
+})
+
+describe('extractErrorCodes()', () => {
+  test('extracts error codes from table', () => {
+    const table = {
+      headers: ['Error Code', 'Message'],
+      rows: [
+        ['400', 'Bad Request'],
+        ['401', 'Unauthorized'],
+        ['500', 'Internal Server Error'],
+      ],
+    }
+    const result = extractErrorCodes('', table)
+    expect(result).toEqual({
+      kind: 'error_codes',
+      codes: [
+        { status: 400, message: 'Bad Request' },
+        { status: 401, message: 'Unauthorized' },
+        { status: 500, message: 'Internal Server Error' },
+      ],
+    })
+  })
+
+  test('handles table without explicit error code header', () => {
+    const table = {
+      headers: ['Status', 'Description'],
+      rows: [
+        ['404', 'Not Found'],
+        ['429', 'Too Many Requests'],
+      ],
+    }
+    const result = extractErrorCodes('', table)
+    expect(result).toEqual({
+      kind: 'error_codes',
+      codes: [
+        { status: 404, message: 'Not Found' },
+        { status: 429, message: 'Too Many Requests' },
+      ],
+    })
+  })
+
+  test('returns null when no table', () => {
+    const result = extractErrorCodes('some text', null)
     expect(result).toBeNull()
   })
 })
