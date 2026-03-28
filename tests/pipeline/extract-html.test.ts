@@ -28,10 +28,13 @@ describe('extractHtml', () => {
       })
       expect(result.ok).toBe(true)
       if (result.ok) {
-        expect(result.data.rawPages).toHaveLength(1)
-        expect(result.data.rawPages[0].text).toContain('GET /users')
-        expect(result.data.rawPages[0].tables).toHaveLength(1)
-        expect(result.data.pages).toBe(1)
+        // With heading splitting: h1 + h2 = 2 pages per URL
+        expect(result.data.rawPages).toHaveLength(2)
+        const allText = result.data.rawPages.map((p) => p.text).join(' ')
+        expect(allText).toContain('GET /users')
+        const allTables = result.data.rawPages.flatMap((p) => p.tables)
+        expect(allTables).toHaveLength(1)
+        expect(result.data.pages).toBe(2)
         expect(result.data.hasTables).toBe(true)
       }
     } finally {
@@ -62,10 +65,11 @@ describe('extractHtml', () => {
       })
       expect(result.ok).toBe(true)
       if (result.ok) {
-        expect(result.data.rawPages).toHaveLength(2)
+        // With heading splitting: each URL (h1+h2) produces 2 pages → 4 total
+        expect(result.data.rawPages).toHaveLength(4)
         expect(result.data.rawPages[0].pageNumber).toBe(1)
-        expect(result.data.rawPages[1].pageNumber).toBe(2)
-        expect(result.data.pages).toBe(2)
+        expect(result.data.rawPages[3].pageNumber).toBe(4)
+        expect(result.data.pages).toBe(4)
       }
     } finally {
       server.stop()
