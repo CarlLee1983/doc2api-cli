@@ -2,6 +2,7 @@ import { basename } from 'node:path'
 import { ok } from '../output/result'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
+import { contextRefine } from '../pipeline/context-refine'
 import { detectLanguage } from '../pipeline/detect-language'
 import { extractText } from '../pipeline/extract'
 import type { Chunk, ChunkType, InspectData } from '../types/chunk'
@@ -21,7 +22,8 @@ export async function runInspect(
 
   const { pages, rawPages } = extractResult.data
   const rawChunks = chunkPages(rawPages)
-  const chunks = classifyChunks(rawChunks)
+  const classified = classifyChunks(rawChunks)
+  const chunks = contextRefine(classified)
 
   const byType = countByType(chunks)
 

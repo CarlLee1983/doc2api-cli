@@ -7,6 +7,7 @@ import { runDoctor } from './commands/doctor'
 import { runInspect } from './commands/inspect'
 import { runInspectHtml } from './commands/inspect-html'
 import { runValidate } from './commands/validate'
+import { runWatch } from './commands/watch'
 import { formatOutput } from './output/formatter'
 import { VERSION } from './version'
 
@@ -23,6 +24,8 @@ const { positionals, values } = parseArgs({
     'max-depth': { type: 'string' },
     'max-pages': { type: 'string' },
     browser: { type: 'boolean', default: false },
+    verbose: { type: 'boolean', default: false },
+    debounce: { type: 'string' },
   },
 })
 
@@ -55,6 +58,7 @@ Usage:
   doc2api assemble <file.json>   Assemble endpoints into OpenAPI spec
   doc2api validate <file.json>   Validate an OpenAPI spec
   doc2api doctor                 Check environment dependencies
+  doc2api watch <source>         Watch source and auto-rebuild
 
 Flags:
   --json          Output in JSON format (for AI agents)
@@ -65,7 +69,9 @@ Flags:
   --crawl         Crawl linked pages from the entry URL
   --max-depth     Max crawl depth (default: 2)
   --max-pages     Max pages to crawl (default: 50)
-  --browser       Force Playwright browser for SPA rendering`)
+  --browser       Force Playwright browser for SPA rendering
+  --verbose     Verbose output (for watch mode)
+  --debounce    Debounce delay in ms (default: 300)`)
     process.exit(command ? 0 : 1)
   }
 
@@ -194,6 +200,43 @@ Flags:
       }
     }
     process.exit(0)
+  }
+
+  if (command === 'watch') {
+    const source = positionals[1]
+    if (!source) {
+      console.error('Error: doc2api watch requires a source (file path or URL)')
+      process.exit(3)
+    }
+
+    const isUrl = source.startsWith('http://') || source.startsWith('https://')
+    const isUrlList = !isUrl && source.endsWith('.txt')
+    if (!isUrl && !isUrlList) {
+      const pathError = validateFilePath(source)
+      if (pathError) {
+        console.error(`Error: ${pathError}`)
+        process.exit(3)
+      }
+    }
+
+    const debounceMs = parsePositiveInt(values.debounce, 'debounce', 300)
+
+    const handle = await runWatch(source, {
+      output: values.output ?? values.outdir ?? '.',
+      verbose: values.verbose ?? false,
+      debounce: debounceMs,
+      pages: values.pages,
+    })
+
+    // Graceful shutdown on Ctrl+C
+    process.on('SIGINT', () => {
+      handle.stop()
+      console.error('\nWatch stopped.')
+      process.exit(0)
+    })
+
+    // Keep process alive
+    await new Promise(() => {})
   }
 
   console.error(`Unknown command: ${command}. Run "doc2api help" for usage.`)
