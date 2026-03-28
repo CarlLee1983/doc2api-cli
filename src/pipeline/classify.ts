@@ -1,5 +1,6 @@
-import type { Chunk, ChunkType } from '../types/chunk'
+import type { Chunk, ChunkContent, ChunkType } from '../types/chunk'
 import type { RawChunk } from './chunk'
+import { extractEndpoint } from './extractors'
 
 interface ClassifyRule {
   readonly type: ChunkType
@@ -103,10 +104,12 @@ export function classifyChunks(rawChunks: readonly RawChunk[]): readonly Chunk[]
   })
 }
 
-function extractContent(chunk: RawChunk, type: ChunkType): string | null {
+export function extractContent(
+  chunk: RawChunk,
+  type: ChunkType,
+): ChunkContent | null {
   if (type === 'endpoint_definition') {
-    const match = chunk.raw_text.match(ENDPOINT_PATTERN)
-    return match ? match[0].trim() : null
+    return extractEndpoint(chunk.raw_text, chunk.table)
   }
 
   return null
