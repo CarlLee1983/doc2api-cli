@@ -20,6 +20,11 @@ export interface InspectHtmlFlags {
   readonly browser: boolean
   readonly outdir?: string
   readonly allowPrivate?: boolean
+  readonly requestDelay?: number
+  readonly noRobots?: boolean
+  readonly checkpointDir?: string
+  readonly resume?: boolean
+  readonly maxRetries?: number
 }
 
 async function readUrlList(filePath: string): Promise<Result<readonly string[]>> {
@@ -46,10 +51,19 @@ export async function runInspectHtml(
   source: string,
   flags: InspectHtmlFlags,
 ): Promise<Result<InspectData>> {
-  let options: HtmlExtractOptions = {
-    urls: [],
+  const sharedOptions: Omit<HtmlExtractOptions, 'urls'> = {
     forceBrowser: flags.browser,
     allowPrivate: flags.allowPrivate,
+    requestDelay: flags.requestDelay,
+    respectRobotsTxt: !flags.noRobots,
+    checkpointDir: flags.checkpointDir,
+    resume: flags.resume,
+    maxRetries: flags.maxRetries,
+  }
+
+  let options: HtmlExtractOptions = {
+    urls: [],
+    ...sharedOptions,
   }
 
   if (flags.isUrlList) {

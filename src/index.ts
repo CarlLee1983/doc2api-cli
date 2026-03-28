@@ -26,6 +26,11 @@ const { positionals, values } = parseArgs({
     browser: { type: 'boolean', default: false },
     verbose: { type: 'boolean', default: false },
     debounce: { type: 'string' },
+    'request-delay': { type: 'string' },
+    'no-robots': { type: 'boolean', default: false },
+    'checkpoint-dir': { type: 'string' },
+    resume: { type: 'boolean', default: false },
+    'max-retries': { type: 'string' },
   },
 })
 
@@ -70,8 +75,13 @@ Flags:
   --max-depth     Max crawl depth (default: 2)
   --max-pages     Max pages to crawl (default: 50)
   --browser       Force Playwright browser for SPA rendering
-  --verbose     Verbose output (for watch mode)
-  --debounce    Debounce delay in ms (default: 300)`)
+  --verbose         Verbose output (for watch mode)
+  --debounce        Debounce delay in ms (default: 300)
+  --request-delay   Delay between crawl batches in ms (default: 200)
+  --no-robots       Ignore robots.txt (default: respect it)
+  --checkpoint-dir  Directory for crawl checkpoints (enables resume)
+  --resume          Resume interrupted crawl from checkpoint
+  --max-retries     Max retries for failed requests (default: 3)`)
     process.exit(command ? 0 : 1)
   }
 
@@ -112,6 +122,8 @@ Flags:
     } else {
       const maxDepth = parsePositiveInt(values['max-depth'], 'max-depth', 2)
       const maxPages = parsePositiveInt(values['max-pages'], 'max-pages', 50)
+      const requestDelay = parsePositiveInt(values['request-delay'], 'request-delay', 200)
+      const maxRetries = parsePositiveInt(values['max-retries'], 'max-retries', 3)
 
       const result = await runInspectHtml(source, {
         json: jsonMode,
@@ -122,6 +134,11 @@ Flags:
         maxPages,
         browser: values.browser ?? false,
         outdir: values.outdir,
+        requestDelay,
+        noRobots: values['no-robots'] ?? false,
+        checkpointDir: values['checkpoint-dir'],
+        resume: values.resume ?? false,
+        maxRetries,
       })
       console.log(formatOutput(result, jsonMode))
       process.exit(result.ok ? 0 : 1)
@@ -220,12 +237,17 @@ Flags:
     }
 
     const debounceMs = parsePositiveInt(values.debounce, 'debounce', 300)
+    const watchRequestDelay = parsePositiveInt(values['request-delay'], 'request-delay', 200)
+    const watchMaxRetries = parsePositiveInt(values['max-retries'], 'max-retries', 3)
 
     const handle = await runWatch(source, {
       output: values.output ?? values.outdir ?? '.',
       verbose: values.verbose ?? false,
       debounce: debounceMs,
       pages: values.pages,
+      requestDelay: watchRequestDelay,
+      noRobots: values['no-robots'] ?? false,
+      maxRetries: watchMaxRetries,
     })
 
     // Graceful shutdown on Ctrl+C

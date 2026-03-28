@@ -4,10 +4,12 @@ import type { Result } from '../../types/result'
 import { checkPlaywright, fetchWithBrowser } from './browser-fetcher'
 import type { FetchOptions } from './http-fetcher'
 import { fetchHtml } from './http-fetcher'
+import { withRetry } from './retry'
 import { detectSpa } from './spa-detector'
 
 export interface FetchPageOptions extends FetchOptions {
   readonly forceBrowser?: boolean
+  readonly maxRetries?: number
 }
 
 export async function fetchPage(
@@ -22,7 +24,16 @@ export async function fetchPage(
     return fetchWithBrowser(url, fetchOpts)
   }
 
-  const result = await fetchHtml(url, fetchOpts)
+  const fetchFn = () => fetchHtml(url, fetchOpts)
+  const result =
+    options.maxRetries && options.maxRetries > 0
+      ? await withRetry(fetchFn, {
+          maxRetries: options.maxRetries,
+          initialDelayMs: 1000,
+          maxDelayMs: 30_000,
+        })
+      : await fetchFn()
+
   if (!result.ok) return result
 
   if (detectSpa(result.data.html)) {

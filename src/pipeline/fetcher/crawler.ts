@@ -1,13 +1,22 @@
 import * as cheerio from 'cheerio'
 import { fail, ok } from '../../output/result'
 import type { Result } from '../../types/result'
+import { loadCheckpoint, removeCheckpoint, saveCheckpoint } from './checkpoint'
+import type { CrawlState } from './checkpoint'
 import { fetchPage } from './fetch-page'
+import { PERMISSIVE_RULES, fetchRobotsTxt } from './robots'
+import type { RobotsRules } from './robots'
 
 export interface CrawlOptions {
   readonly entryUrl: string
   readonly maxDepth: number
   readonly maxPages: number
   readonly concurrency: number
+  readonly requestDelay: number
+  readonly respectRobotsTxt: boolean
+  readonly checkpointDir?: string
+  readonly resume: boolean
+  readonly maxRetries: number
 }
 
 export interface CrawlResult {
@@ -19,6 +28,10 @@ export interface FetchedPage {
   readonly url: string
   readonly html: string
   readonly pageNumber: number
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 const EXCLUDED_EXTENSIONS = /\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|pdf|zip)$/i
@@ -93,6 +106,23 @@ export async function crawl(
   const pages: FetchedPage[] = []
   let queue: { url: string; depth: number }[] = [{ url: normalizeUrl(options.entryUrl), depth: 0 }]
 
+  // Fetch robots.txt rules
+  const robotsRules: RobotsRules = options.respectRobotsTxt
+    ? await fetchRobotsTxt(options.entryUrl)
+    : PERMISSIVE_RULES
+
+  // Apply crawl-delay from robots.txt as minimum requestDelay
+  const effectiveDelay = Math.max(options.requestDelay, (robotsRules.crawlDelay ?? 0) * 1000)
+
+  // Restore checkpoint state if resuming
+  if (options.resume && options.checkpointDir) {
+    const loaded = await loadCheckpoint(options.checkpointDir, options.entryUrl)
+    if (loaded.ok && loaded.data) {
+      for (const url of loaded.data.visited) visited.add(url)
+      queue = [...loaded.data.queue]
+    }
+  }
+
   while (queue.length > 0 && pages.length < options.maxPages) {
     const batch = queue.slice(0, options.concurrency)
     queue = queue.slice(options.concurrency)
@@ -101,11 +131,22 @@ export async function crawl(
         .filter((item) => {
           const normalized = normalizeUrl(item.url)
           if (visited.has(normalized)) return false
+          // Check robots.txt
+          try {
+            const path = new URL(normalized).pathname
+            if (!robotsRules.isAllowed(path)) return false
+          } catch {
+            /* skip invalid URLs */
+          }
           visited.add(normalized)
           return true
         })
         .map(async (item) => {
-          const result = await fetchPage(item.url, { forceBrowser, allowPrivate })
+          const result = await fetchPage(item.url, {
+            forceBrowser,
+            allowPrivate,
+            maxRetries: options.maxRetries,
+          })
           return { ...item, result }
         }),
     )
@@ -132,6 +173,27 @@ export async function crawl(
         queue = [...queue, ...newLinks]
       }
     }
+
+    // Save checkpoint after each batch
+    if (options.checkpointDir) {
+      const state: CrawlState = {
+        version: 1,
+        entryUrl: options.entryUrl,
+        visited: [...visited],
+        queue: queue.map((item) => ({ url: item.url, depth: item.depth })),
+        timestamp: new Date().toISOString(),
+      }
+      await saveCheckpoint(state, options.checkpointDir)
+    }
+
+    if (effectiveDelay > 0 && queue.length > 0) {
+      await sleep(effectiveDelay)
+    }
+  }
+
+  // Clean up checkpoint on successful completion
+  if (options.checkpointDir) {
+    await removeCheckpoint(options.checkpointDir, options.entryUrl)
   }
 
   if (pages.length === 0) {

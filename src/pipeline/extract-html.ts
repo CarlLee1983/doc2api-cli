@@ -18,6 +18,11 @@ export interface HtmlExtractOptions {
   }
   readonly forceBrowser?: boolean
   readonly allowPrivate?: boolean
+  readonly requestDelay?: number
+  readonly respectRobotsTxt?: boolean
+  readonly checkpointDir?: string
+  readonly resume?: boolean
+  readonly maxRetries?: number
 }
 
 const SPECIALIZED_PARSERS = [readmeParser] as const
@@ -34,7 +39,17 @@ function parseHtml(html: string, url: string, pageNumberOffset: number): readonl
 }
 
 export async function extractHtml(options: HtmlExtractOptions): Promise<Result<ExtractResult>> {
-  const { urls, crawl: crawlOptions, forceBrowser = false, allowPrivate = false } = options
+  const {
+    urls,
+    crawl: crawlOptions,
+    forceBrowser = false,
+    allowPrivate = false,
+    requestDelay,
+    respectRobotsTxt,
+    checkpointDir,
+    resume,
+    maxRetries,
+  } = options
 
   if (urls.length === 0 && !crawlOptions) {
     return fail('E5005', 'NO_URLS', 'No URLs provided for HTML extraction', {
@@ -50,6 +65,11 @@ export async function extractHtml(options: HtmlExtractOptions): Promise<Result<E
       maxDepth: crawlOptions.maxDepth ?? 2,
       maxPages: crawlOptions.maxPages ?? 20,
       concurrency: 3,
+      requestDelay: requestDelay ?? 200,
+      respectRobotsTxt: respectRobotsTxt ?? true,
+      checkpointDir,
+      resume: resume ?? false,
+      maxRetries: maxRetries ?? 3,
     }
 
     const crawlResult = await crawl(opts, forceBrowser, allowPrivate)
