@@ -14,12 +14,57 @@ export interface Table {
   readonly rows: readonly (readonly string[])[]
 }
 
+export interface EndpointContent {
+  readonly kind: 'endpoint'
+  readonly method: string
+  readonly path: string
+  readonly summary: string | null
+}
+
+export interface ParameterContent {
+  readonly kind: 'parameter'
+  readonly parameters: readonly {
+    readonly name: string
+    readonly type: string | null
+    readonly required: boolean | null
+    readonly description: string | null
+  }[]
+}
+
+export interface ResponseContent {
+  readonly kind: 'response'
+  readonly statusCode: number | null
+  readonly body: string | null
+}
+
+export interface AuthContent {
+  readonly kind: 'auth'
+  readonly scheme: string | null
+  readonly location: string | null
+  readonly description: string
+}
+
+export interface ErrorCodesContent {
+  readonly kind: 'error_codes'
+  readonly codes: readonly {
+    readonly status: number
+    readonly message: string | null
+  }[]
+}
+
+export type ChunkContent =
+  | EndpointContent
+  | ParameterContent
+  | ResponseContent
+  | AuthContent
+  | ErrorCodesContent
+
 export interface Chunk {
   readonly id: string
   readonly page: number
   readonly type: ChunkType
   readonly confidence: number
-  readonly content: string | null
+  readonly content: ChunkContent | null
   readonly raw_text: string
   readonly table: Table | null
 }
