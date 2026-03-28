@@ -78,33 +78,58 @@ function reExtractContent(
   return null
 }
 
+function applyContextRules(chunk: Chunk, prev: Chunk | null, next: Chunk | null): Chunk {
+  for (const rule of contextRules) {
+    const result = rule.apply(chunk, prev, next)
+    if (!result) continue
+
+    // Only upgrade, never downgrade
+    if (result.confidence <= chunk.confidence) continue
+
+    const needsReExtract = result.type !== chunk.type
+    const newContent = needsReExtract
+      ? reExtractContent(chunk.raw_text, chunk.table, result.type)
+      : chunk.content
+
+    return {
+      ...chunk,
+      type: result.type,
+      confidence: result.confidence,
+      content: newContent,
+    }
+  }
+
+  return chunk
+}
+
+// Sliding window streaming refinement.
+// prev/next reference the original (pre-refined) chunks, same as the batch version.
+export async function* contextRefineStream(
+  chunks: AsyncIterable<Chunk>,
+): AsyncGenerator<Chunk, void, undefined> {
+  let prev: Chunk | null = null
+  let current: Chunk | null = null
+
+  for await (const next of chunks) {
+    if (current !== null) {
+      yield applyContextRules(current, prev, next)
+      prev = current
+    }
+    current = next
+  }
+
+  // Flush the last chunk with no following neighbor
+  if (current !== null) {
+    yield applyContextRules(current, prev, null)
+  }
+}
+
 // Single-pass design: prev/next reference the original (pre-refined) chunks.
 // A promoted chunk will not cascade to its neighbors in the same pass.
 export function contextRefine(chunks: readonly Chunk[]): readonly Chunk[] {
   return chunks.map((chunk, i) => {
     const prev = i > 0 ? chunks[i - 1] : null
     const next = i < chunks.length - 1 ? chunks[i + 1] : null
-
-    for (const rule of contextRules) {
-      const result = rule.apply(chunk, prev, next)
-      if (!result) continue
-
-      // Only upgrade, never downgrade
-      if (result.confidence <= chunk.confidence) continue
-
-      const needsReExtract = result.type !== chunk.type
-      const newContent = needsReExtract
-        ? reExtractContent(chunk.raw_text, chunk.table, result.type)
-        : chunk.content
-
-      return {
-        ...chunk,
-        type: result.type,
-        confidence: result.confidence,
-        content: newContent,
-      }
-    }
-
-    return chunk
+    return applyContextRules(chunk, prev, next)
   })
 }

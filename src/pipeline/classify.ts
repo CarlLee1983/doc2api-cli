@@ -85,6 +85,33 @@ const rules: readonly ClassifyRule[] = [
   },
 ]
 
+export async function* classifyChunkStream(
+  chunks: AsyncIterable<RawChunk>,
+): AsyncGenerator<Chunk, void, undefined> {
+  for await (const raw of chunks) {
+    let bestType: ChunkType = 'general_text'
+    let bestConfidence = 0.3
+
+    for (const rule of rules) {
+      const confidence = rule.test(raw)
+      if (confidence > bestConfidence) {
+        bestType = rule.type
+        bestConfidence = confidence
+      }
+    }
+
+    yield {
+      id: raw.id,
+      page: raw.page,
+      type: bestType,
+      confidence: bestConfidence,
+      content: bestType === 'general_text' ? null : extractContent(raw, bestType),
+      raw_text: raw.raw_text,
+      table: raw.table,
+    }
+  }
+}
+
 export function classifyChunks(rawChunks: readonly RawChunk[]): readonly Chunk[] {
   return rawChunks.map((raw) => {
     let bestType: ChunkType = 'general_text'
