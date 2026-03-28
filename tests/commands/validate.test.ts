@@ -9,11 +9,15 @@ describe('runValidate()', () => {
     const specPath = resolve(FIXTURE_DIR, 'valid-spec.json')
     await Bun.write(
       specPath,
-      JSON.stringify({
-        openapi: '3.0.3',
-        info: { title: 'Test', version: '1.0.0' },
-        paths: { '/test': { get: { responses: { '200': { description: 'OK' } } } } },
-      }),
+      `${JSON.stringify(
+        {
+          openapi: '3.0.3',
+          info: { title: 'Test', version: '1.0.0' },
+          paths: { '/test': { get: { responses: { '200': { description: 'OK' } } } } },
+        },
+        null,
+        2,
+      )}\n`,
     )
     const result = await runValidate(specPath, { json: true })
     expect(result.ok).toBe(true)

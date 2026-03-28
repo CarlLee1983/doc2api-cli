@@ -121,18 +121,37 @@ export function extractErrorCodes(_rawText: string, table: Table | null): ErrorC
 }
 
 const STATUS_CODE_PATTERN = /\b(?:HTTP\s+|status\s+)?([1-5]\d{2})\b/i
-const JSON_BODY_PATTERN = /(\{[\s\S]*\}|\[[\s\S]*\])/
+
+function findJsonBlock(text: string): string | null {
+  const start = text.search(/[{[]/)
+  if (start === -1) return null
+
+  const open = text[start]
+  const close = open === '{' ? '}' : ']'
+  let depth = 0
+
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === open) depth++
+    else if (text[i] === close) depth--
+    if (depth === 0) return text.slice(start, i + 1)
+  }
+
+  return null
+}
 
 export function extractResponse(rawText: string, _table: Table | null): ResponseContent | null {
-  const jsonMatch = rawText.match(JSON_BODY_PATTERN)
-  if (!jsonMatch) return null
+  const body = findJsonBlock(rawText)
+  if (!body) return null
 
-  const statusMatch = rawText.match(STATUS_CODE_PATTERN)
+  const jsonStart = rawText.indexOf(body)
+  // Only search for status code in text before the JSON block
+  const textBeforeJson = rawText.slice(0, jsonStart)
+  const statusMatch = textBeforeJson.match(STATUS_CODE_PATTERN)
   const statusCode = statusMatch ? Number.parseInt(statusMatch[1], 10) : null
 
   return {
     kind: 'response',
     statusCode,
-    body: jsonMatch[1].trim(),
+    body: body.trim(),
   }
 }

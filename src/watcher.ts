@@ -7,10 +7,10 @@ export interface WatcherEvent {
 }
 
 export interface WatcherOptions {
-  readonly sourceFile: string
+  readonly sourceFile: string | null
   readonly outputDir: string
   readonly debounceMs: number
-  readonly onEvent: (event: WatcherEvent) => void
+  readonly onEvent: (event: WatcherEvent) => void | Promise<void>
 }
 
 export interface Watcher {
@@ -24,7 +24,7 @@ export function createWatcher(options: WatcherOptions): Watcher {
   const { sourceFile, outputDir, debounceMs, onEvent } = options
   const selfWritten = new Map<string, number>()
   const watchers: FSWatcher[] = []
-  let debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>()
   let closed = false
   // Ignore spurious initial events emitted by the OS on watcher startup
   const startupTime = Date.now()
@@ -47,44 +47,56 @@ export function createWatcher(options: WatcherOptions): Watcher {
       key,
       setTimeout(() => {
         debounceTimers.delete(key)
-        if (!closed) onEvent(event)
+        if (!closed) {
+          Promise.resolve(onEvent(event)).catch((err) => {
+            console.error('[watcher] Event handler error:', err)
+          })
+        }
       }, debounceMs),
     )
   }
 
-  // Watch source file (watch the directory containing it)
-  const resolvedSource = resolve(sourceFile)
-  const sourceDir = dirname(resolvedSource)
-  const sourceBasename = basename(resolvedSource)
+  // Watch source file if it's a local file (skip for URLs)
+  if (sourceFile) {
+    const resolvedSource = resolve(sourceFile)
+    const sourceDir = dirname(resolvedSource)
+    const sourceBasename = basename(resolvedSource)
+    const sameDir = sourceDir === resolve(outputDir)
 
-  // Determine if source dir and output dir are the same
-  const sameDir = sourceDir === resolve(outputDir)
-
-  if (sameDir) {
-    // Single watcher handles both source changes and JSON changes
-    const combinedWatcher = watch(outputDir, (_eventType, filename) => {
-      if (closed || !filename) return
-      if (filename === sourceBasename) {
-        if (!isSelfWritten(sourceFile)) {
-          debouncedEmit('source', { type: 'source_changed', filePath: sourceFile })
+    if (sameDir) {
+      // Single watcher handles both source changes and JSON changes
+      const combinedWatcher = watch(outputDir, (_eventType, filename) => {
+        if (closed || !filename) return
+        if (filename === sourceBasename) {
+          if (!isSelfWritten(resolvedSource)) {
+            debouncedEmit('source', { type: 'source_changed', filePath: resolvedSource })
+          }
+        } else if (filename.endsWith('.json')) {
+          const fullPath = join(outputDir, filename)
+          if (!isSelfWritten(fullPath)) {
+            debouncedEmit(`json:${filename}`, { type: 'json_changed', filePath: fullPath })
+          }
         }
-      } else if (filename.endsWith('.json')) {
+      })
+      watchers.push(combinedWatcher)
+    } else {
+      const sourceWatcher = watch(sourceDir, (_eventType, filename) => {
+        if (closed || filename !== sourceBasename) return
+        if (isSelfWritten(resolvedSource)) return
+        debouncedEmit('source', { type: 'source_changed', filePath: resolvedSource })
+      })
+      watchers.push(sourceWatcher)
+
+      const outputWatcher = watch(outputDir, (_eventType, filename) => {
+        if (closed || !filename || !filename.endsWith('.json')) return
         const fullPath = join(outputDir, filename)
-        if (!isSelfWritten(fullPath)) {
-          debouncedEmit(`json:${filename}`, { type: 'json_changed', filePath: fullPath })
-        }
-      }
-    })
-    watchers.push(combinedWatcher)
+        if (isSelfWritten(fullPath)) return
+        debouncedEmit(`json:${filename}`, { type: 'json_changed', filePath: fullPath })
+      })
+      watchers.push(outputWatcher)
+    }
   } else {
-    // Separate watchers for source dir and output dir
-    const sourceWatcher = watch(sourceDir, (_eventType, filename) => {
-      if (closed || filename !== sourceBasename) return
-      if (isSelfWritten(sourceFile)) return
-      debouncedEmit('source', { type: 'source_changed', filePath: sourceFile })
-    })
-    watchers.push(sourceWatcher)
-
+    // URL source — only watch output directory for JSON changes
     const outputWatcher = watch(outputDir, (_eventType, filename) => {
       if (closed || !filename || !filename.endsWith('.json')) return
       const fullPath = join(outputDir, filename)
@@ -103,7 +115,7 @@ export function createWatcher(options: WatcherOptions): Watcher {
       for (const timer of debounceTimers.values()) {
         clearTimeout(timer)
       }
-      debounceTimers = new Map()
+      debounceTimers.clear()
     },
     markSelfWritten(filePath: string) {
       selfWritten.set(filePath, Date.now())

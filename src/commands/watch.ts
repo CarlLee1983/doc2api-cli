@@ -87,10 +87,11 @@ export async function runWatch(source: string, flags: WatchFlags): Promise<Watch
   }
 
   // Create watcher after initial write so markSelfWritten is available
+  const isUrl = source.startsWith('http://') || source.startsWith('https://')
   let watcher: Watcher | null = null
 
   watcher = createWatcher({
-    sourceFile: resolve(source),
+    sourceFile: isUrl ? null : resolve(source),
     outputDir,
     debounceMs: flags.debounce,
     onEvent: async (event) => {

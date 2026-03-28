@@ -78,6 +78,8 @@ function reExtractContent(
   return null
 }
 
+// Single-pass design: prev/next reference the original (pre-refined) chunks.
+// A promoted chunk will not cascade to its neighbors in the same pass.
 export function contextRefine(chunks: readonly Chunk[]): readonly Chunk[] {
   return chunks.map((chunk, i) => {
     const prev = i > 0 ? chunks[i - 1] : null

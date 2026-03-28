@@ -1,3 +1,3 @@
 # Comment line
-http://localhost:52213/api
-http://localhost:52213/docs
+http://localhost:54660/api
+http://localhost:54660/docs
