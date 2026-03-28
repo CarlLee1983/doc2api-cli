@@ -207,10 +207,13 @@ Flags:
     const result = await runValidate(resolve(filePath), { json: jsonMode })
     console.log(formatOutput(result, jsonMode))
 
-    if (result.ok && !result.data.valid) {
+    if (!result.ok) {
+      process.exit(1)
+    }
+    if (!result.data.valid) {
       process.exit(4)
     }
-    process.exit(result.ok ? 0 : 4)
+    process.exit(0)
   }
 
   if (command === 'doctor') {
