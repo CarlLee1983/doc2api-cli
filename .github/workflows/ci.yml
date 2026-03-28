@@ -26,5 +26,13 @@ jobs:
       - name: Lint
         run: bun run check
 
+      - name: Build
+        run: bun run build
+
+      - name: Verify build output
+        run: |
+          test -f dist/index.js || (echo "dist/index.js missing" && exit 1)
+          test -f dist/lib.js || (echo "dist/lib.js missing" && exit 1)
+
       - name: Run tests
         run: bun test
