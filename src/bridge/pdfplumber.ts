@@ -1,4 +1,4 @@
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -56,8 +56,12 @@ export function validateFilePath(filePath: string): string | null {
   if (filePath.includes('\0')) {
     return 'Invalid file path: contains null bytes'
   }
-  if (filePath.split(/[/\\]/).some((segment) => segment === '..')) {
+  const normalized = resolve(filePath)
+  if (normalized !== filePath && filePath.split(/[/\\]/).some((segment) => segment === '..')) {
     return 'Invalid file path: path traversal not allowed'
+  }
+  if (basename(filePath).startsWith('-')) {
+    return 'Invalid file path: filename cannot start with a hyphen'
   }
   return null
 }

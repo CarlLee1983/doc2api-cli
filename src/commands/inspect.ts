@@ -12,9 +12,9 @@ import type { Result } from '../types/result'
 
 export async function runInspect(
   pdfPath: string,
-  _flags: InspectFlags,
+  flags: InspectFlags,
 ): Promise<Result<InspectData>> {
-  const extractResult = await extractText(pdfPath)
+  const extractResult = await extractText(pdfPath, { pages: flags.pages })
 
   if (!extractResult.ok) {
     return extractResult
@@ -40,14 +40,12 @@ export async function runInspect(
 }
 
 export function countByType(chunks: readonly Chunk[]): Record<ChunkType, number> {
-  const counts = Object.fromEntries(CHUNK_TYPES.map((type) => [type, 0])) as Record<
-    ChunkType,
-    number
-  >
-
-  for (const chunk of chunks) {
-    counts[chunk.type] += 1
+  const counts: Record<string, number> = {}
+  for (const type of CHUNK_TYPES) {
+    counts[type] = 0
   }
-
-  return counts
+  for (const chunk of chunks) {
+    counts[chunk.type] = (counts[chunk.type] ?? 0) + 1
+  }
+  return counts as Record<ChunkType, number>
 }

@@ -32,6 +32,19 @@ export async function fetchHtml(url: string, options?: FetchOptions): Promise<Re
       })
     }
 
+    const MAX_RESPONSE_SIZE = 10 * 1024 * 1024
+    const contentLength = response.headers.get('content-length')
+    if (contentLength && Number.parseInt(contentLength, 10) > MAX_RESPONSE_SIZE) {
+      return fail(
+        'E5001',
+        'FETCH_FAILED',
+        `Response too large: ${contentLength} bytes (max 10MB)`,
+        {
+          context: { url },
+        },
+      )
+    }
+
     const html = await response.text()
 
     return ok({

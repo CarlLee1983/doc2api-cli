@@ -11,6 +11,9 @@ export interface WatchFlags {
   readonly verbose: boolean
   readonly debounce: number
   readonly pages?: string
+  readonly requestDelay?: number
+  readonly noRobots?: boolean
+  readonly maxRetries?: number
 }
 
 export interface WatchHandle {
@@ -53,6 +56,9 @@ async function runInspectPipeline(source: string, flags: WatchFlags): Promise<In
     maxDepth: 2,
     maxPages: 50,
     browser: false,
+    requestDelay: flags.requestDelay,
+    noRobots: flags.noRobots,
+    maxRetries: flags.maxRetries,
   })
   return result.ok ? result.data : null
 }
@@ -99,8 +105,8 @@ export async function runWatch(source: string, flags: WatchFlags): Promise<Watch
         console.error(`[${timestamp()}] ↻ source changed, re-inspecting...`)
         const result = await runInspectPipeline(source, flags)
         if (result) {
-          watcher?.markSelfWritten(chunksPath)
           await Bun.write(chunksPath, JSON.stringify(result, null, 2))
+          watcher?.markSelfWritten(chunksPath)
           if (flags.verbose) {
             console.log(JSON.stringify(result, null, 2))
           } else {
@@ -117,8 +123,8 @@ export async function runWatch(source: string, flags: WatchFlags): Promise<Watch
         if (event.filePath === specPath) return
 
         console.error(`[${timestamp()}] ↻ ${basename(event.filePath)} changed, assembling...`)
-        const success = await runAssemblePipeline(event.filePath)
-        if (success) {
+        const specContent = await runAssemblePipeline(event.filePath)
+        if (specContent) {
           watcher?.markSelfWritten(specPath)
           console.error(`[${timestamp()}] ✓ assemble + validate`)
         } else {

@@ -1,4 +1,5 @@
 import type { Table } from '../types/chunk'
+import type { Result } from '../types/result'
 import type { RawPage } from './extract'
 
 export interface RawChunk {
@@ -7,6 +8,8 @@ export interface RawChunk {
   readonly raw_text: string
   readonly table: Table | null
 }
+
+export const MAX_CHUNK_CHARS = 8000
 
 // Patterns that indicate section boundaries
 const HEADING_PATTERNS = [
@@ -42,7 +45,105 @@ export function chunkPages(pages: readonly RawPage[]): readonly RawChunk[] {
     }
   }
 
-  return allChunks
+  return splitOversizedChunks(allChunks, nextId)
+}
+
+export async function* chunkPagesStream(
+  pages: AsyncIterable<Result<RawPage>>,
+): AsyncGenerator<RawChunk, void, undefined> {
+  const nextId = createIdGenerator()
+
+  for await (const pageResult of pages) {
+    if (!pageResult.ok) continue
+
+    const page = pageResult.data
+    const textChunks = splitByHeadings(page.text, page.pageNumber, nextId)
+    const tableChunks: RawChunk[] = page.tables.map((table) => ({
+      id: nextId(),
+      page: page.pageNumber,
+      raw_text: formatTableAsText(table),
+      table,
+    }))
+
+    const allChunks = [...textChunks, ...tableChunks]
+    const split = splitOversizedChunks(allChunks, nextId)
+
+    for (const chunk of split) {
+      yield chunk
+    }
+  }
+}
+
+function groupSegments(
+  segments: readonly string[],
+  delimiter: string,
+  maxLen: number,
+): readonly string[] {
+  const groups: string[] = []
+  let current = ''
+  for (const seg of segments) {
+    const candidate = current ? `${current}${delimiter}${seg}` : seg
+    if (candidate.length > maxLen && current) {
+      groups.push(current)
+      current = seg
+    } else {
+      current = candidate
+    }
+  }
+  if (current) groups.push(current)
+  return groups
+}
+
+function hardCut(text: string): readonly string[] {
+  const pieces: string[] = []
+  let remaining = text
+  while (remaining.length > MAX_CHUNK_CHARS) {
+    pieces.push(remaining.slice(0, MAX_CHUNK_CHARS))
+    remaining = remaining.slice(MAX_CHUNK_CHARS)
+  }
+  if (remaining) pieces.push(remaining)
+  return pieces
+}
+
+export function splitOversizedChunk(chunk: RawChunk, nextId: () => string): readonly RawChunk[] {
+  // Try splitting by paragraph boundary first
+  const byParagraph = groupSegments(chunk.raw_text.split('\n\n'), '\n\n', MAX_CHUNK_CHARS)
+
+  // For each paragraph group, split by line if still too large, then hard cut
+  const pieces: string[] = []
+  for (const para of byParagraph) {
+    if (para.length <= MAX_CHUNK_CHARS) {
+      pieces.push(para)
+    } else {
+      const byLine = groupSegments(para.split('\n'), '\n', MAX_CHUNK_CHARS)
+      for (const line of byLine) {
+        if (line.length <= MAX_CHUNK_CHARS) {
+          pieces.push(line)
+        } else {
+          const cuts = hardCut(line)
+          for (const cut of cuts) {
+            pieces.push(cut)
+          }
+        }
+      }
+    }
+  }
+
+  return pieces.map((text, index) => ({
+    id: index === 0 ? chunk.id : nextId(),
+    page: chunk.page,
+    raw_text: text,
+    table: index === 0 ? chunk.table : null,
+  }))
+}
+
+function splitOversizedChunks(
+  chunks: readonly RawChunk[],
+  nextId: () => string,
+): readonly RawChunk[] {
+  return chunks.flatMap((chunk) =>
+    chunk.raw_text.length > MAX_CHUNK_CHARS ? splitOversizedChunk(chunk, nextId) : [chunk],
+  )
 }
 
 function splitByHeadings(
