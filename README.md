@@ -118,7 +118,42 @@ doc2api doctor [--json]
 | `--verbose` | Verbose output (watch mode) |
 | `--debounce` | Debounce delay in ms (default: 300, watch mode) |
 
+| `--version` | Print version and exit |
+| `--help` | Print usage and exit |
+
 PDF files are capped at 100MB. Use `--pages` to process a subset of a large document.
+
+## Error Reference
+
+All commands return structured errors in `--json` mode with `code`, `type`, `message`, and optional `suggestion`.
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error (pipeline failure, fetch error, unknown command) |
+| 2 | Assembly failure |
+| 3 | Input validation error (bad arguments, invalid file path) |
+| 4 | OpenAPI spec validation failure |
+
+### Error Codes
+
+| Code | Type | Description |
+|------|------|-------------|
+| E1001 | EXTRACT_FAILED | PDF content extraction failed |
+| E2001 | INVALID_INPUT | Input is not valid JSON |
+| E2002 | MISSING_FIELDS | Required fields missing from AssembleInput |
+| E3001 | FILE_NOT_FOUND | File or directory not found |
+| E3002 | NOT_PDF / checkpoint_write_error | Invalid file format or checkpoint I/O error |
+| E3003 | checkpoint_read_error | Failed to read checkpoint file |
+| E3004 | checkpoint_parse_error | Failed to parse checkpoint JSON |
+| E3005 | checkpoint_invalid | Checkpoint file is not a valid object |
+| E3006 | checkpoint_version_mismatch | Checkpoint version mismatch |
+| E4001 | VALIDATION_FAILED / INVALID_FORMAT | OpenAPI spec validation error or invalid JSON |
+| E5001 | FETCH_FAILED | HTTP fetch failure (timeout, SSRF blocked, status error) |
+| E5003 | CRAWL_FAILED | All crawled pages failed to fetch |
+| E5005 | NO_CONTENT / NO_URLS / NO_PAGES | No usable content extracted |
 
 ## Architecture
 
