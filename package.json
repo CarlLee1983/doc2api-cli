@@ -1,6 +1,6 @@
 {
   "name": "@carllee1983/doc2api",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Convert API documentation (PDF, HTML) to OpenAPI 3.x specs — AI Agent collaboration tool",
   "type": "module",
   "bin": {
