@@ -1,5 +1,5 @@
 import { type FSWatcher, watch } from 'node:fs'
-import { basename, join } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 
 export interface WatcherEvent {
   readonly type: 'source_changed' | 'json_changed'
@@ -53,11 +53,12 @@ export function createWatcher(options: WatcherOptions): Watcher {
   }
 
   // Watch source file (watch the directory containing it)
-  const sourceDir = sourceFile.slice(0, sourceFile.lastIndexOf('/')) || '.'
-  const sourceBasename = basename(sourceFile)
+  const resolvedSource = resolve(sourceFile)
+  const sourceDir = dirname(resolvedSource)
+  const sourceBasename = basename(resolvedSource)
 
   // Determine if source dir and output dir are the same
-  const sameDir = sourceDir === outputDir
+  const sameDir = sourceDir === resolve(outputDir)
 
   if (sameDir) {
     // Single watcher handles both source changes and JSON changes

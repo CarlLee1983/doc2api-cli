@@ -209,10 +209,20 @@ Flags:
       process.exit(3)
     }
 
+    const isUrl = source.startsWith('http://') || source.startsWith('https://')
+    const isUrlList = !isUrl && source.endsWith('.txt')
+    if (!isUrl && !isUrlList) {
+      const pathError = validateFilePath(source)
+      if (pathError) {
+        console.error(`Error: ${pathError}`)
+        process.exit(3)
+      }
+    }
+
     const debounceMs = parsePositiveInt(values.debounce, 'debounce', 300)
 
     const handle = await runWatch(source, {
-      output: values.outdir ?? '.',
+      output: values.output ?? values.outdir ?? '.',
       verbose: values.verbose ?? false,
       debounce: debounceMs,
       pages: values.pages,
