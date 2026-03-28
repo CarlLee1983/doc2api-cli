@@ -31,6 +31,8 @@ const { positionals, values } = parseArgs({
     'checkpoint-dir': { type: 'string' },
     resume: { type: 'boolean', default: false },
     'max-retries': { type: 'string' },
+    version: { type: 'boolean', default: false },
+    help: { type: 'boolean', default: false },
   },
 })
 
@@ -55,7 +57,12 @@ function parsePositiveInt(value: string | undefined, name: string, defaultValue:
 }
 
 async function main(): Promise<void> {
-  if (!command || command === 'help') {
+  if (values.version) {
+    console.error(`doc2api v${VERSION}`)
+    process.exit(0)
+  }
+
+  if (!command || command === 'help' || values.help) {
     console.error(`doc2api v${VERSION} — Convert API docs to OpenAPI 3.x
 
 Usage:
@@ -82,7 +89,7 @@ Flags:
   --checkpoint-dir  Directory for crawl checkpoints (enables resume)
   --resume          Resume interrupted crawl from checkpoint
   --max-retries     Max retries for failed requests (default: 3)`)
-    process.exit(command ? 0 : 1)
+    process.exit(command || values.help ? 0 : 1)
   }
 
   if (command === 'inspect') {
