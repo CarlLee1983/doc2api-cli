@@ -1,5 +1,5 @@
-import { resolve } from 'node:path'
 import { describe, expect, test } from 'bun:test'
+import { resolve } from 'node:path'
 import { normalizePath } from '../../src/commands/diff'
 import { runDiff } from '../../src/commands/diff'
 import type { Chunk, InspectData } from '../../src/types/chunk'
@@ -124,7 +124,10 @@ describe('runDiff()', () => {
         raw_text: 'GET /users',
       }),
     ]
-    const inspectPath = writeFixture('diff-inspect-match.json', JSON.stringify(makeInspectData(chunks)))
+    const inspectPath = writeFixture(
+      'diff-inspect-match.json',
+      JSON.stringify(makeInspectData(chunks)),
+    )
     const specPath = writeFixture(
       'diff-spec-match.json',
       JSON.stringify({
@@ -289,7 +292,10 @@ describe('runDiff() YAML spec', () => {
         raw_text: 'GET /v1/products',
       }),
     ]
-    const inspectPath = writeFixture('diff-yaml-inspect.json', JSON.stringify(makeInspectData(chunks)))
+    const inspectPath = writeFixture(
+      'diff-yaml-inspect.json',
+      JSON.stringify(makeInspectData(chunks)),
+    )
     const yamlContent = `openapi: "3.0.3"
 info:
   title: Test
@@ -307,5 +313,85 @@ paths:
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.data.summary.missingCount).toBe(0)
+  })
+})
+
+describe('runDiff() integration', () => {
+  test('full scenario: 3 endpoints, 1 missing with related chunks', async () => {
+    const chunks = [
+      makeChunk({
+        id: 'chunk-001',
+        type: 'endpoint_definition',
+        confidence: 0.9,
+        raw_text: 'GET /api/users — List all users',
+      }),
+      makeChunk({
+        id: 'chunk-002',
+        type: 'parameter_table',
+        confidence: 0.85,
+        raw_text: 'page | integer | optional',
+      }),
+      makeChunk({
+        id: 'chunk-003',
+        type: 'endpoint_definition',
+        confidence: 0.9,
+        raw_text: 'POST /api/users — Create a user',
+      }),
+      makeChunk({
+        id: 'chunk-004',
+        type: 'response_example',
+        confidence: 0.8,
+        raw_text: '{"id": 1, "name": "test"}',
+      }),
+      makeChunk({
+        id: 'chunk-005',
+        type: 'endpoint_definition',
+        confidence: 0.9,
+        raw_text: 'DELETE /api/users/{userId}',
+      }),
+      makeChunk({
+        id: 'chunk-006',
+        type: 'general_text',
+        confidence: 0.3,
+        raw_text: 'This endpoint is dangerous.',
+      }),
+    ]
+
+    const inspectPath = writeFixture(
+      'diff-integration.json',
+      JSON.stringify(makeInspectData(chunks)),
+    )
+    const specPath = writeFixture(
+      'diff-integration-spec.json',
+      JSON.stringify({
+        openapi: '3.0.3',
+        info: { title: 'Users API', version: '1.0.0' },
+        paths: {
+          '/api/users': {
+            get: { responses: { '200': { description: 'OK' } } },
+          },
+          '/api/users/{id}': {
+            delete: { responses: { '204': { description: 'No Content' } } },
+          },
+        },
+      }),
+    )
+
+    const result = await runDiff(inspectPath, specPath, { json: false, confidence: 0.5 })
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    // 3 doc endpoints, 2 in spec, 1 missing
+    expect(result.data.summary.totalDocEndpoints).toBe(3)
+    expect(result.data.summary.totalSpecEndpoints).toBe(2)
+    expect(result.data.summary.missingCount).toBe(1)
+
+    // Missing: POST /api/users with 1 related chunk (response_example)
+    expect(result.data.missing[0].method).toBe('POST')
+    expect(result.data.missing[0].path).toBe('/api/users')
+    expect(result.data.missing[0].relatedChunks).toHaveLength(1)
+    expect(result.data.missing[0].relatedChunks[0].type).toBe('response_example')
+
+    // DELETE matched despite different param name ({userId} vs {id})
   })
 })
