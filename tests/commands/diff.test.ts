@@ -276,3 +276,36 @@ describe('runDiff()', () => {
     expect(result.error.code).toBe('E3001')
   })
 })
+
+describe('runDiff() YAML spec', () => {
+  const flags = { json: false, confidence: 0.5 }
+
+  test('parses YAML spec correctly', async () => {
+    const chunks = [
+      makeChunk({
+        id: 'chunk-001',
+        type: 'endpoint_definition',
+        confidence: 0.9,
+        raw_text: 'GET /v1/products',
+      }),
+    ]
+    const inspectPath = writeFixture('diff-yaml-inspect.json', JSON.stringify(makeInspectData(chunks)))
+    const yamlContent = `openapi: "3.0.3"
+info:
+  title: Test
+  version: "1.0.0"
+paths:
+  /v1/products:
+    get:
+      responses:
+        "200":
+          description: OK
+`
+    const specPath = writeFixture('diff-spec.yaml', yamlContent)
+
+    const result = await runDiff(inspectPath, specPath, flags)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.data.summary.missingCount).toBe(0)
+  })
+})
