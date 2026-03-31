@@ -13,6 +13,7 @@ bun run check               # Biome lint
 bun run check:fix           # Biome auto-fix
 bun run build               # Build to dist/ (ESM, Bun target)
 bun run src/index.ts        # Run CLI directly without building
+bun run src/index.ts diff <inspect.json> <spec.yaml>  # Compare chunks vs spec
 ```
 
 ## Architecture
@@ -61,12 +62,13 @@ Async generator variants of each pipeline stage for memory-efficient processing.
 
 Each command is a function returning `Promise<Result<T>>`. CLI entry point (`src/index.ts`) routes commands via `parseArgs` with strict mode.
 
+- **assemble.ts** — OpenAPI assembly from JSON input (file or stdin, 50MB limit).
+- **diff.ts** — Chunk-vs-spec comparison. Reads InspectData JSON + OpenAPI YAML/JSON, reports missing endpoints with related chunks.
+- **doctor.ts** — Environment dependency check.
 - **inspect.ts** — PDF inspection. Passes `--pages` to extractText.
 - **inspect-html.ts** — HTML inspection. Handles single URL, URL list, and crawl modes.
-- **watch.ts** — File watcher with debounced rebuild. Monitors source and output directory.
-- **assemble.ts** — OpenAPI assembly from JSON input (file or stdin, 50MB limit).
 - **validate.ts** — OpenAPI spec validation.
-- **doctor.ts** — Environment dependency check.
+- **watch.ts** — File watcher with debounced rebuild. Monitors source and output directory.
 
 ### Assembly (src/assembler/)
 
