@@ -7,6 +7,7 @@ import { runDoctor } from './commands/doctor'
 import { runInspect } from './commands/inspect'
 import { runInspectHtml } from './commands/inspect-html'
 import { runValidate } from './commands/validate'
+import { runDiff } from './commands/diff'
 import { runWatch } from './commands/watch'
 import { formatOutput } from './output/formatter'
 import { VERSION } from './version'
@@ -31,6 +32,7 @@ const { positionals, values } = parseArgs({
     'checkpoint-dir': { type: 'string' },
     resume: { type: 'boolean', default: false },
     'max-retries': { type: 'string' },
+    confidence: { type: 'string' },
     version: { type: 'boolean', default: false },
     help: { type: 'boolean', default: false },
   },
@@ -69,6 +71,7 @@ Usage:
   doc2api inspect <source>       Extract and classify content (PDF or URL)
   doc2api assemble <file.json>   Assemble endpoints into OpenAPI spec
   doc2api validate <file.json>   Validate an OpenAPI spec
+  doc2api diff <inspect.json> <spec.yaml>  Compare chunks against spec
   doc2api doctor                 Check environment dependencies
   doc2api watch <source>         Watch source and auto-rebuild
 
@@ -88,7 +91,8 @@ Flags:
   --no-robots       Ignore robots.txt (default: respect it)
   --checkpoint-dir  Directory for crawl checkpoints (enables resume)
   --resume          Resume interrupted crawl from checkpoint
-  --max-retries     Max retries for failed requests (default: 3)`)
+  --max-retries     Max retries for failed requests (default: 3)
+  --confidence    Endpoint confidence threshold (0-1, default: 0.5)`)
     process.exit(command || values.help ? 0 : 1)
   }
 
@@ -214,6 +218,73 @@ Flags:
       process.exit(4)
     }
     process.exit(0)
+  }
+
+  if (command === 'diff') {
+    const inspectPath = positionals[1]
+    const specPath = positionals[2]
+
+    if (!inspectPath || !specPath) {
+      console.error('Error: doc2api diff requires <inspect.json> <spec.yaml>')
+      process.exit(3)
+    }
+
+    const confidenceStr = values.confidence
+    let confidence = 0.5
+    if (confidenceStr !== undefined) {
+      confidence = Number.parseFloat(confidenceStr)
+      if (Number.isNaN(confidence) || confidence < 0 || confidence > 1) {
+        console.error(
+          `Error: --confidence must be a number between 0 and 1, got "${confidenceStr}"`,
+        )
+        process.exit(3)
+      }
+    }
+
+    const result = await runDiff(resolve(inspectPath), resolve(specPath), {
+      json: jsonMode,
+      output: values.output,
+      confidence,
+    })
+
+    if (result.ok) {
+      const { summary, missing } = result.data
+      if (jsonMode) {
+        console.log(JSON.stringify(result, null, 2))
+      } else {
+        if (summary.totalDocEndpoints === 0) {
+          console.error(
+            '⚠ No endpoint chunks found — is this the right inspect output?',
+          )
+        }
+        if (summary.missingCount === 0) {
+          console.log(
+            `✓ All ${summary.totalDocEndpoints} documented endpoints found in spec.`,
+          )
+        } else {
+          console.log(
+            `Missing endpoints (${summary.missingCount} of ${summary.totalDocEndpoints}):`,
+          )
+          for (const ep of missing) {
+            const related =
+              ep.relatedChunks.length > 0
+                ? `(${ep.relatedChunks.length} related: ${ep.relatedChunks.map((r) => r.type).join(', ')})`
+                : '(0 related)'
+            console.log(`  ${ep.method} ${ep.path}  ${related}`)
+          }
+        }
+      }
+
+      if (values.output) {
+        await Bun.write(resolve(values.output), JSON.stringify(result.data, null, 2))
+        console.error(`Wrote diff report to ${values.output}`)
+      }
+
+      process.exit(summary.missingCount > 0 ? 1 : 0)
+    }
+
+    console.log(formatOutput(result, jsonMode))
+    process.exit(2)
   }
 
   if (command === 'doctor') {
