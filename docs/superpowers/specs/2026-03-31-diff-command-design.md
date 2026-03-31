@@ -106,6 +106,8 @@ normalizePath(path: string): string
 
 `E6003` 不是 fatal — 回傳 `ok()` 但加 warning。檔案層級錯誤沿用 `E3xxx`。
 
+`--confidence` 值必須為 0-1 之間的數字，否則回傳 `E2001`（`INVALID_ARGUMENT`）並附帶 suggestion。
+
 ## 輸出格式
 
 ### Gate pass（exit 0）
