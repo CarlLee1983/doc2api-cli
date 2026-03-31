@@ -1,11 +1,11 @@
 # diff 指令設計
 
-> pdf2api 新增 `diff` 指令，比對 inspect 產出的 classified chunks 與最終 OpenAPI spec，列出文件裡有但 spec 裡缺少的 endpoints。作為 Phase 1 → Phase 2 的 gate 條件。
+> doc2api 新增 `diff` 指令，比對 inspect 產出的 classified chunks 與最終 OpenAPI spec，列出文件裡有但 spec 裡缺少的 endpoints。作為 Phase 1 → Phase 2 的 gate 條件。
 
 ## 指令介面
 
 ```
-pdf2api diff <inspect.json> <spec.yaml>
+doc2api diff <inspect.json> <spec.yaml>
 ```
 
 ### Flags
