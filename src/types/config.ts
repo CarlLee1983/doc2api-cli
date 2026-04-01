@@ -14,3 +14,16 @@ export interface AssembleFlags {
 export interface ValidateFlags {
   readonly json: boolean
 }
+
+export interface SessionFlags {
+  readonly output?: string
+  readonly format: 'yaml' | 'json'
+  readonly pages?: string
+  readonly crawl: boolean
+  readonly maxDepth: number
+  readonly maxPages: number
+  readonly browser: boolean
+  readonly requestDelay: number
+  readonly noRobots: boolean
+  readonly maxRetries: number
+}
