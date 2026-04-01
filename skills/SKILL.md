@@ -1,6 +1,6 @@
 ---
 name: doc2api
-description: Convert API documentation (PDF, HTML) to OpenAPI 3.x specs. Use when a user provides a PDF or URL containing API docs and wants to generate an OpenAPI specification. Triggers on: "convert this API PDF to OpenAPI", "extract endpoints from this URL", "generate spec from documentation", "inspect this HTML docs site", "crawl API documentation", "assemble OpenAPI from endpoints", "validate OpenAPI spec". Also use when working with doc2api CLI commands (inspect, inspect-html, assemble, validate, doctor, watch).
+description: Convert API documentation (PDF, HTML) to OpenAPI 3.x specs. Use when a user provides a PDF or URL containing API docs and wants to generate an OpenAPI specification. Triggers on: "convert this API PDF to OpenAPI", "extract endpoints from this URL", "generate spec from documentation", "inspect this HTML docs site", "crawl API documentation", "assemble OpenAPI from endpoints", "validate OpenAPI spec", "start a session to process API docs", "process endpoints one at a time". Also use when working with doc2api CLI commands (inspect, assemble, validate, session, doctor, watch).
 ---
 
 # doc2api — API Documentation to OpenAPI Converter
@@ -88,6 +88,68 @@ Chunk types and usage:
 **Skip chunks with confidence < 0.5** or ask user to verify. Chunks auto-split at 8000 chars (~2000 tokens).
 
 Structured `content` field provides parsed data when available (endpoint method/path, parameter lists, auth schemes, error codes). Fall back to `raw_text` when `content` is null.
+
+### Session Workflow (recommended for large documents)
+
+For large documents or when context window is limited, use the session-based workflow that feeds one endpoint group at a time:
+
+```bash
+# 1. Start a session — runs the full pipeline and groups chunks by endpoint
+doc2api session start <source.pdf>
+doc2api session start <source.pdf> --pages 1-50
+
+# 2. Read preamble (auth info, global descriptions)
+doc2api session preamble
+
+# 3. Process endpoint groups one at a time
+doc2api session next          # Get next endpoint group
+doc2api session current       # Re-read current group
+doc2api session skip          # Skip non-endpoint group
+
+# 4. Submit your analysis for each group
+doc2api session submit endpoints.json
+echo '<json>' | doc2api session submit --stdin
+
+# 5. Check progress
+doc2api session status
+
+# 6. Assemble final spec from all submissions
+doc2api session finish -o spec.yaml
+
+# Other
+doc2api session discard       # Abandon session
+```
+
+Session `next` output:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "groupId": "g-003",
+    "progress": "3/12",
+    "anchor": { "id": "p5-c1", "type": "endpoint_definition", "content": { "kind": "endpoint", "method": "POST", "path": "/v1/orders" }, "raw_text": "..." },
+    "related": [{ "id": "p5-c2", "type": "parameter_table", "raw_text": "..." }],
+    "summary": "POST /v1/orders"
+  }
+}
+```
+
+Submit format — same `EndpointDef` as assemble input, or wrapped with groupId:
+
+```json
+{ "method": "POST", "path": "/v1/orders", "summary": "Create order", "responses": { "201": { "description": "Created" } } }
+```
+
+Or array: `[{ "method": "POST", ... }, ...]`
+
+Or wrapped: `{ "groupId": "g-003", "endpoints": [{ "method": "POST", ... }] }`
+
+Tips:
+- Use `preamble` to understand auth before processing endpoints
+- `submit` validates and returns warnings — fix and re-submit if needed
+- Session state persists to disk — safe to interrupt and resume
+- `status` shows processed/skipped/remaining counts
 
 ### 2. Watch mode (optional)
 
@@ -178,6 +240,6 @@ All commands return structured JSON in `--json` mode:
 { "ok": false, "error": { "code": "E2002", "type": "MISSING_FIELDS", "message": "...", "suggestion": "..." } }
 ```
 
-Error code ranges: `E1xxx`=extraction, `E2xxx`=input, `E3xxx`=file, `E4xxx`=validation, `E5xxx`=fetch/crawl.
+Error code ranges: `E1xxx`=extraction, `E2xxx`=input, `E3xxx`=file, `E4xxx`=validation, `E5xxx`=fetch/crawl, `E6xxx`=diff, `E7xxx`=session.
 
 Exit codes: 0=success, 1=error, 2=assemble fail, 3=input validation, 4=spec validation fail.
