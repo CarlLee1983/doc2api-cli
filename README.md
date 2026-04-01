@@ -33,6 +33,9 @@ doc2api watch api-doc.pdf -o output/
 # Assemble endpoints into OpenAPI spec
 doc2api assemble endpoints.json -o spec.json
 
+# Compare documented endpoints against an existing spec
+doc2api diff inspect.json spec.yaml
+
 # Validate the spec
 doc2api validate spec.json
 ```
@@ -83,6 +86,19 @@ doc2api assemble <file.json> [-o output.json] [--format json|yaml]
 doc2api assemble --stdin [-o output.json]
 ```
 
+### `diff`
+
+Compare documented endpoints against an existing OpenAPI spec. Reports missing endpoints and links them to their parameter tables and response examples.
+
+```bash
+doc2api diff <inspect.json> <spec.yaml> [flags]
+
+# Compare and exit 1 if missing endpoints found
+doc2api diff output/inspect.json spec.yaml --confidence 0.7
+```
+
+Paths are normalized (trailing slashes removed, path parameters unified) to ensure accurate matching.
+
 ### `validate`
 
 Validate an OpenAPI spec.
@@ -105,7 +121,10 @@ doc2api doctor [--json]
 |------|-------------|
 | `--json` | JSON output (for AI agents) |
 | `-o, --output` | Output file path |
+| `--outdir` | Output directory for watch mode / batch inspect |
 | `--pages` | Page range for PDF (e.g., `1-10`) |
+| `--stdin` | Read input from stdin (assemble command) |
+| `--format` | Output format: `yaml` (default) or `json` (assemble command) |
 | `--crawl` | Crawl linked pages from entry URL |
 | `--max-depth` | Max crawl depth (default: 2) |
 | `--max-pages` | Max pages to crawl (default: 50) |
@@ -115,9 +134,9 @@ doc2api doctor [--json]
 | `--checkpoint-dir` | Directory for crawl checkpoints (enables resume) |
 | `--resume` | Resume interrupted crawl from checkpoint |
 | `--max-retries` | Max retries for failed requests (default: 3) |
+| `--confidence` | Endpoint confidence threshold (0-1, default: 0.5) |
 | `--verbose` | Verbose output (watch mode) |
 | `--debounce` | Debounce delay in ms (default: 300, watch mode) |
-
 | `--version` | Print version and exit |
 | `--help` | Print usage and exit |
 
@@ -132,7 +151,7 @@ All commands return structured errors in `--json` mode with `code`, `type`, `mes
 | Code | Meaning |
 |------|---------|
 | 0 | Success |
-| 1 | General error (pipeline failure, fetch error, unknown command) |
+| 1 | General error (pipeline failure, fetch error, unknown command, or missing endpoints found in `diff`) |
 | 2 | Assembly failure |
 | 3 | Input validation error (bad arguments, invalid file path) |
 | 4 | OpenAPI spec validation failure |
@@ -154,6 +173,8 @@ All commands return structured errors in `--json` mode with `code`, `type`, `mes
 | E5001 | FETCH_FAILED | HTTP fetch failure (timeout, SSRF blocked, status error) |
 | E5003 | CRAWL_FAILED | All crawled pages failed to fetch |
 | E5005 | NO_CONTENT / NO_URLS / NO_PAGES | No usable content extracted |
+| E6001 | INVALID_INSPECT_JSON | Inspect JSON missing "chunks" array or invalid format |
+| E6002 | INVALID_SPEC_FILE | Failed to parse OpenAPI spec file (JSON or YAML) |
 
 ## Programmatic API
 

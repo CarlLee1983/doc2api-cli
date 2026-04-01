@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] — 2026-03-31
+
+### Added
+- `diff` command to compare documented endpoints against an existing OpenAPI spec
+- Path normalization for `diff` matching (trailing slashes, path parameter unification)
+- Related chunk collection for missing endpoints (parameters, responses, errors)
+- `--confidence` flag for endpoint detection threshold
+- E6xxx error codes for `diff` command failures
+
 ## [1.0.0] — 2026-03-28
 
 ### Added
