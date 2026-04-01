@@ -13,6 +13,10 @@ export { streamPipeline, collectStream } from './pipeline/stream'
 export { extractHtml } from './pipeline/extract-html'
 export type { HtmlExtractOptions } from './pipeline/extract-html'
 
+// Grouping pipeline
+export { groupChunks } from './pipeline/group'
+export type { EndpointGroup, PreambleGroup, GroupedResult } from './types/group'
+
 // Assembly
 export { buildOpenApiSpec } from './assembler/openapi-builder'
 export type { OpenApiSpec } from './assembler/openapi-builder'
