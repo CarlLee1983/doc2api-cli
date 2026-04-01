@@ -13,9 +13,7 @@ export function normalizePath(path: string): string {
   }
 
   // 2. Unify path parameters to {_}
-  normalized = normalized
-    .replace(/\{[^}]+\}/g, '{_}')
-    .replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, '{_}')
+  normalized = normalized.replace(/\{[^}]+\}/g, '{_}').replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, '{_}')
 
   // 3. Lowercase
   normalized = normalized.toLowerCase()

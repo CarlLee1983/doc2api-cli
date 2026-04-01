@@ -3,11 +3,11 @@ import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { validateFilePath, validatePages } from './bridge/pdfplumber'
 import { runAssemble } from './commands/assemble'
+import { runDiff } from './commands/diff'
 import { runDoctor } from './commands/doctor'
 import { runInspect } from './commands/inspect'
 import { runInspectHtml } from './commands/inspect-html'
 import { runValidate } from './commands/validate'
-import { runDiff } from './commands/diff'
 import { runWatch } from './commands/watch'
 import { formatOutput } from './output/formatter'
 import { VERSION } from './version'
@@ -253,14 +253,10 @@ Flags:
         console.log(JSON.stringify(result, null, 2))
       } else {
         if (summary.totalDocEndpoints === 0) {
-          console.error(
-            '⚠ No endpoint chunks found — is this the right inspect output?',
-          )
+          console.error('⚠ No endpoint chunks found — is this the right inspect output?')
         }
         if (summary.missingCount === 0) {
-          console.log(
-            `✓ All ${summary.totalDocEndpoints} documented endpoints found in spec.`,
-          )
+          console.log(`✓ All ${summary.totalDocEndpoints} documented endpoints found in spec.`)
         } else {
           console.log(
             `Missing endpoints (${summary.missingCount} of ${summary.totalDocEndpoints}):`,

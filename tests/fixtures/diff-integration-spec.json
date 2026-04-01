@@ -1,0 +1,1 @@
+{"openapi":"3.0.3","info":{"title":"Users API","version":"1.0.0"},"paths":{"/api/users":{"get":{"responses":{"200":{"description":"OK"}}}},"/api/users/{id}":{"delete":{"responses":{"204":{"description":"No Content"}}}}}}

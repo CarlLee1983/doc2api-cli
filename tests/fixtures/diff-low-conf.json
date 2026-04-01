@@ -1,0 +1,1 @@
+{"source":"test.pdf","pages":1,"language":"en","chunks":[{"page":1,"type":"endpoint_definition","confidence":0.3,"content":null,"table":null,"id":"chunk-001","raw_text":"GET /low-confidence"}],"stats":{"total_chunks":1,"by_type":{"endpoint_definition":1,"parameter_table":0,"response_example":0,"auth_description":0,"error_codes":0,"general_text":0}}}
