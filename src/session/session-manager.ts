@@ -150,9 +150,17 @@ export async function submitEndpoints(
   const session = result.data
 
   const allWarnings: string[] = []
+  let hasInvalid = false
   for (const ep of endpoints) {
     const validation = validateSubmission(ep as unknown as Record<string, unknown>)
     allWarnings.push(...validation.warnings)
+    if (!validation.valid) hasInvalid = true
+  }
+
+  if (hasInvalid) {
+    return fail('E7004', 'SUBMIT_VALIDATION', `Submission rejected: ${allWarnings.join('; ')}`, {
+      suggestion: 'Fix the endpoint definitions and re-submit',
+    })
   }
 
   const submission: SubmittedEndpoint = {

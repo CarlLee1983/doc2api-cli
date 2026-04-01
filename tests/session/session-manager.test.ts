@@ -12,6 +12,7 @@ import {
   skipGroup,
   submitEndpoints,
 } from '../../src/session/session-manager'
+import type { EndpointDef } from '../../src/types/endpoint'
 import type { EndpointGroup, PreambleGroup } from '../../src/types/group'
 import type { Chunk } from '../../src/types/chunk'
 
@@ -148,6 +149,34 @@ describe('session-manager', () => {
     if (result.ok) {
       expect(result.data.accepted).toBe(true)
       expect(result.data.remaining).toBe(1)
+    }
+  })
+
+  test('submitEndpoints rejects endpoints missing method', async () => {
+    tempDir = await mkdtemp(join(tmpdir(), 'doc2api-test-'))
+    await createSession(tempDir, 'test.pdf', testPreamble, testGroups)
+    await nextGroup(tempDir)
+    const result = await submitEndpoints(tempDir, 'g-001', [{
+      path: '/users',
+      responses: { '200': { description: 'OK' } },
+    } as unknown as EndpointDef])
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error.code).toBe('E7004')
+    }
+  })
+
+  test('submitEndpoints rejects endpoints missing path', async () => {
+    tempDir = await mkdtemp(join(tmpdir(), 'doc2api-test-'))
+    await createSession(tempDir, 'test.pdf', testPreamble, testGroups)
+    await nextGroup(tempDir)
+    const result = await submitEndpoints(tempDir, 'g-001', [{
+      method: 'GET',
+      responses: { '200': { description: 'OK' } },
+    } as unknown as EndpointDef])
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error.code).toBe('E7004')
     }
   })
 

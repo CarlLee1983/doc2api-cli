@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { basename } from 'node:path'
+import { validatePages } from '../bridge/pdfplumber'
 import { fail, ok } from '../output/result'
 import { chunkPages } from '../pipeline/chunk'
 import { classifyChunks } from '../pipeline/classify'
@@ -71,6 +72,12 @@ async function handleStart(
   }
 
   const pagesValue = values.pages as string | undefined
+  if (pagesValue) {
+    const pagesError = validatePages(pagesValue)
+    if (pagesError) {
+      return fail('E2001', 'INVALID_INPUT', pagesError)
+    }
+  }
 
   const extractResult = await extractText(resolve(source), { pages: pagesValue })
   if (!extractResult.ok) return extractResult
@@ -138,9 +145,13 @@ async function handleSubmit(
   let endpoints: readonly EndpointDef[]
 
   if (isRecord(parsed) && typeof parsed.groupId === 'string' && Array.isArray(parsed.endpoints)) {
+    const validationError = validateEndpointArray(parsed.endpoints)
+    if (validationError) return fail('E7004', 'SUBMIT_VALIDATION', validationError)
     groupId = parsed.groupId
     endpoints = parsed.endpoints as EndpointDef[]
   } else if (Array.isArray(parsed)) {
+    const validationError = validateEndpointArray(parsed)
+    if (validationError) return fail('E7004', 'SUBMIT_VALIDATION', validationError)
     const currentResult = await currentGroup(BASE_DIR)
     if (!currentResult.ok) return currentResult
     groupId = currentResult.data.group.groupId
@@ -183,4 +194,14 @@ async function handleFinish(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function validateEndpointArray(items: readonly unknown[]): string | null {
+  if (items.length === 0) return 'Endpoints array is empty'
+  for (const [i, item] of items.entries()) {
+    if (!isRecord(item)) return `Endpoint [${i}] is not an object`
+    if (typeof item.method !== 'string' || !item.method) return `Endpoint [${i}] missing "method"`
+    if (typeof item.path !== 'string' || !item.path) return `Endpoint [${i}] missing "path"`
+  }
+  return null
 }
