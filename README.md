@@ -21,23 +21,18 @@ bunx playwright install chromium
 # Check environment
 doc2api doctor
 
-# Extract structured chunks from a PDF
-doc2api inspect api-doc.pdf --json --pages 1-10
+# 1. Direct Pipeline (Best for small/medium documents)
+doc2api inspect api-doc.pdf --json > inspect.json
+doc2api assemble inspect.json -o spec.yaml
 
-# Extract from HTML documentation
-doc2api inspect https://docs.example.com/api --json --crawl
+# 2. Session Workflow (Best for large documents & AI Agents)
+doc2api session start api-doc.pdf
+doc2api session next      # Get first group of endpoints
+doc2api session submit endpoints.json
+doc2api session finish -o spec.yaml
 
-# Watch mode: auto-rebuild on changes
-doc2api watch api-doc.pdf -o output/
-
-# Assemble endpoints into OpenAPI spec
-doc2api assemble endpoints.json -o spec.json
-
-# Compare documented endpoints against an existing spec
+# 3. Compare with existing spec
 doc2api diff inspect.json spec.yaml
-
-# Validate the spec
-doc2api validate spec.json
 ```
 
 ## AI Agent Integration
@@ -47,6 +42,22 @@ This CLI is designed to work with AI Agents. The CLI handles extraction and Open
 See [`skills/SKILL.md`](skills/SKILL.md) for the universal AI Agent skill — works with Claude Code, Gemini CLI, Cursor, Codex, and any agent that supports skill files.
 
 ## Commands
+
+### `session`
+
+Session-based workflow for processing large documents by feeding one endpoint group at a time. Ideal for AI Agents to avoid context window limits.
+
+```bash
+doc2api session start <source> [flags]  # Start a new session
+doc2api session preamble                # Get global auth/info chunks
+doc2api session next                    # Get next endpoint group
+doc2api session submit <file.json>      # Submit analysis for current group
+doc2api session status                  # Check progress
+doc2api session finish -o spec.yaml     # Finalize and export OpenAPI spec
+doc2api session discard                 # Abandon current session
+```
+
+Session state is persisted locally, allowing you to resume work at any time.
 
 ### `inspect`
 
@@ -71,10 +82,6 @@ Watch a source for changes and automatically rebuild chunks and the OpenAPI spec
 
 ```bash
 doc2api watch <source> [flags]
-
-# Watch PDF or URL for changes, auto-rebuild chunks and spec
-doc2api watch api-doc.pdf -o output/ --verbose
-doc2api watch https://docs.example.com -o output/ --crawl
 ```
 
 ### `assemble`
@@ -123,8 +130,8 @@ doc2api doctor [--json]
 | `-o, --output` | Output file path |
 | `--outdir` | Output directory for watch mode / batch inspect |
 | `--pages` | Page range for PDF (e.g., `1-10`) |
-| `--stdin` | Read input from stdin (assemble command) |
-| `--format` | Output format: `yaml` (default) or `json` (assemble command) |
+| `--stdin` | Read input from stdin (assemble/session submit) |
+| `--format` | Output format: `yaml` (default) or `json` |
 | `--crawl` | Crawl linked pages from entry URL |
 | `--max-depth` | Max crawl depth (default: 2) |
 | `--max-pages` | Max pages to crawl (default: 50) |
@@ -140,11 +147,7 @@ doc2api doctor [--json]
 | `--version` | Print version and exit |
 | `--help` | Print usage and exit |
 
-PDF files are capped at 100MB. Use `--pages` to process a subset of a large document.
-
 ## Error Reference
-
-All commands return structured errors in `--json` mode with `code`, `type`, `message`, and optional `suggestion`.
 
 ### Exit Codes
 
@@ -156,25 +159,15 @@ All commands return structured errors in `--json` mode with `code`, `type`, `mes
 | 3 | Input validation error (bad arguments, invalid file path) |
 | 4 | OpenAPI spec validation failure |
 
-### Error Codes
+### Error Code Ranges
 
-| Code | Type | Description |
-|------|------|-------------|
-| E1001 | EXTRACT_FAILED | PDF content extraction failed |
-| E2001 | INVALID_INPUT | Input is not valid JSON |
-| E2002 | MISSING_FIELDS | Required fields missing from AssembleInput |
-| E3001 | FILE_NOT_FOUND | File or directory not found |
-| E3002 | NOT_PDF / checkpoint_write_error | Invalid file format or checkpoint I/O error |
-| E3003 | checkpoint_read_error | Failed to read checkpoint file |
-| E3004 | checkpoint_parse_error | Failed to parse checkpoint JSON |
-| E3005 | checkpoint_invalid | Checkpoint file is not a valid object |
-| E3006 | checkpoint_version_mismatch | Checkpoint version mismatch |
-| E4001 | VALIDATION_FAILED / INVALID_FORMAT | OpenAPI spec validation error or invalid JSON |
-| E5001 | FETCH_FAILED | HTTP fetch failure (timeout, SSRF blocked, status error) |
-| E5003 | CRAWL_FAILED | All crawled pages failed to fetch |
-| E5005 | NO_CONTENT / NO_URLS / NO_PAGES | No usable content extracted |
-| E6001 | INVALID_INSPECT_JSON | Inspect JSON missing "chunks" array or invalid format |
-| E6002 | INVALID_SPEC_FILE | Failed to parse OpenAPI spec file (JSON or YAML) |
+- `E1xxx`: Extraction failures (PDF/HTML)
+- `E2xxx`: Input/JSON parsing errors
+- `E3xxx`: File I/O or path errors
+- `E4xxx`: OpenAPI validation errors
+- `E5xxx`: Fetch/Crawl network errors
+- `E6xxx`: Diff command errors
+- `E7xxx`: Session workflow errors
 
 ## Programmatic API
 
