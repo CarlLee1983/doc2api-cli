@@ -26,3 +26,5 @@ coverage/
 
 # DBCLI
 .dbcli/
+
+.doc2api/
