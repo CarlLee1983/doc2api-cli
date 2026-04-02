@@ -14,6 +14,8 @@ bun run check:fix           # Biome auto-fix
 bun run build               # Build to dist/ (ESM, Bun target)
 bun run src/index.ts        # Run CLI directly without building
 bun run src/index.ts diff <inspect.json> <spec.yaml>  # Compare chunks vs spec
+bun run src/index.ts scout <url>                      # Discover API pages on a site
+bun run src/index.ts scout <url> --save urls.txt      # Save API page URLs to file
 ```
 
 ## Architecture
@@ -31,6 +33,7 @@ PDF ──► extract ──► chunk ──► classify ──► [AI Agent fil
 3. **chunk.ts** — Splits pages into chunks by heading patterns. Auto-splits oversized chunks at 8000 chars (`MAX_CHUNK_CHARS`). Uses closure-based ID generator. Streaming variant: `chunkPagesStream`.
 4. **classify.ts** — Rule-based confidence scoring into 6 chunk types: `endpoint_definition`, `parameter_table`, `response_example`, `auth_description`, `error_codes`, `general_text`. Streaming variant: `classifyChunkStream`.
 5. **context-refine.ts** — Post-classification pass using neighbor context to promote/adjust chunk types (e.g., table after endpoint → parameter_table). Streaming variant: `contextRefineStream` (3-element sliding window).
+6. **scout-scorer.ts** — Lightweight heuristic scoring for API page detection. Signals: `http_method` (+0.4), `url_pattern` (+0.2), `param_keywords` (+0.2), `exclude_url` (-0.3). Threshold: score > 0.3 = API page.
 
 ### Python bridge (src/bridge/pdfplumber.ts ↔ bridge/extract_tables.py)
 
@@ -67,6 +70,7 @@ Each command is a function returning `Promise<Result<T>>`. CLI entry point (`src
 - **doctor.ts** — Environment dependency check.
 - **inspect.ts** — PDF inspection. Passes `--pages` to extractText.
 - **inspect-html.ts** — HTML inspection. Handles single URL, URL list, and crawl modes.
+- **scout.ts** — Site reconnaissance. Crawls a URL, scores each page for API relevance via heuristics, outputs a curated URL list for `inspect`. Supports `--save` to write URL list file and `--all` to include non-API pages.
 - **validate.ts** — OpenAPI spec validation.
 - **watch.ts** — File watcher with debounced rebuild. Monitors source and output directory.
 

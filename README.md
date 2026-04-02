@@ -43,6 +43,25 @@ See [`skills/SKILL.md`](skills/SKILL.md) for the universal AI Agent skill — wo
 
 ## Commands
 
+### `scout`
+
+Discover API documentation pages on a website before running a full extraction. Crawls the site, scores each page for API relevance, and outputs a curated URL list.
+
+```bash
+# Reconnaissance — see what's on the site
+doc2api scout https://developers-pay.line.me/zh/online-api-v3
+
+# Save API page URLs to a file, then inspect
+doc2api scout https://developers-pay.line.me/zh/online-api-v3 --save urls.txt
+doc2api inspect urls.txt --json -o inspect.json
+
+# Include non-API pages in saved list
+doc2api scout https://example.com/api --save urls.txt --all
+
+# JSON output for AI agents
+doc2api scout https://example.com/api --json
+```
+
 ### `session`
 
 Session-based workflow for processing large documents by feeding one endpoint group at a time. Ideal for AI Agents to avoid context window limits.
@@ -142,6 +161,8 @@ doc2api doctor [--json]
 | `--resume` | Resume interrupted crawl from checkpoint |
 | `--max-retries` | Max retries for failed requests (default: 3) |
 | `--confidence` | Endpoint confidence threshold (0-1, default: 0.5) |
+| `--save` | Save URL list to file (scout only) |
+| `--all` | Include non-API pages in saved list (with `--save`) |
 | `--verbose` | Verbose output (watch mode) |
 | `--debounce` | Debounce delay in ms (default: 300, watch mode) |
 | `--version` | Print version and exit |

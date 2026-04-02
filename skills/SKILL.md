@@ -1,6 +1,6 @@
 ---
 name: doc2api
-description: Convert API documentation (PDF, HTML) to OpenAPI 3.x specs. Use when a user provides a PDF or URL containing API docs and wants to generate an OpenAPI specification. Triggers on: "convert this API PDF to OpenAPI", "extract endpoints from this URL", "generate spec from documentation", "inspect this HTML docs site", "crawl API documentation", "assemble OpenAPI from endpoints", "validate OpenAPI spec", "start a session to process API docs", "process endpoints one at a time". Also use when working with doc2api CLI commands (inspect, assemble, validate, session, doctor, watch).
+description: Convert API documentation (PDF, HTML) to OpenAPI 3.x specs. Use when a user provides a PDF or URL containing API docs and wants to generate an OpenAPI specification. Triggers on: "convert this API PDF to OpenAPI", "extract endpoints from this URL", "generate spec from documentation", "inspect this HTML docs site", "crawl API documentation", "scout API docs site", "discover API pages", "assemble OpenAPI from endpoints", "validate OpenAPI spec", "start a session to process API docs", "process endpoints one at a time". Also use when working with doc2api CLI commands (scout, inspect, assemble, validate, session, doctor, watch).
 ---
 
 # doc2api — API Documentation to OpenAPI Converter
@@ -20,6 +20,38 @@ doc2api doctor --json
 Verify `python` and `pdfplumber` for PDF table extraction (gracefully degrades without them). Verify `playwright` for JavaScript-rendered HTML pages (`--browser` flag).
 
 ## Workflow
+
+### 0. Scout the site (optional, for HTML sources)
+
+Before a full extraction, scout the site to discover which pages contain API documentation:
+
+```bash
+# Discover pages and see API relevance scores
+doc2api scout https://docs.example.com/api --json
+
+# Save API-relevant URLs to a file
+doc2api scout https://docs.example.com/api --save urls.txt
+
+# Then inspect using the curated URL list
+doc2api inspect urls.txt --json
+```
+
+Scout output (with `--json`):
+```json
+{
+  "ok": true,
+  "data": {
+    "entry": "https://docs.example.com/api",
+    "totalPages": 12,
+    "apiPages": 8,
+    "pages": [
+      { "url": "...", "title": "...", "score": 0.8, "isApi": true, "signals": ["http_method", "url_pattern"] }
+    ]
+  }
+}
+```
+
+Scoring signals: `http_method` (page contains GET/POST/etc patterns), `url_pattern` (URL contains /api/), `param_keywords` (parameter/required/response), `exclude_url` (FAQ/changelog/blog penalty). Pages with score > 0.3 are classified as API pages.
 
 ### 1. Inspect the source
 
