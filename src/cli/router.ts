@@ -5,6 +5,7 @@ import { runDiff } from '../commands/diff'
 import { runDoctor } from '../commands/doctor'
 import { runInspect } from '../commands/inspect'
 import { runInspectHtml } from '../commands/inspect-html'
+import { runScout } from '../commands/scout'
 import { runSession } from '../commands/session'
 import { runValidate } from '../commands/validate'
 import { runWatch } from '../commands/watch'
@@ -54,6 +55,7 @@ Usage:
   doc2api doctor                 Check environment dependencies
   doc2api watch <source>         Watch source and auto-rebuild
   doc2api session <subcommand>   Session-based workflow for AI Agents
+  doc2api scout <url>          Scout a site for API documentation pages
 
 Flags:
   --json          Output in JSON format (for AI agents)
@@ -72,6 +74,8 @@ Flags:
   --checkpoint-dir  Directory for crawl checkpoints (enables resume)
   --resume          Resume interrupted crawl from checkpoint
   --max-retries     Max retries for failed requests (default: 3)
+  --save            Save URL list to file (scout only)
+  --all             Include non-API pages in saved list (with --save)
   --confidence    Endpoint confidence threshold (0-1, default: 0.5)`)
     process.exit(command || values.help ? 0 : 1)
   }
@@ -316,6 +320,77 @@ Flags:
 
     // Keep process alive
     await new Promise(() => {})
+  }
+
+  if (command === 'scout') {
+    const source = positionals[1]
+    if (!source) {
+      console.error('Error: doc2api scout requires a URL')
+      process.exit(3)
+    }
+
+    if (!source.startsWith('http://') && !source.startsWith('https://')) {
+      console.error('Error: doc2api scout requires a URL (starting with http:// or https://)')
+      process.exit(3)
+    }
+
+    const maxDepth = parsePositiveInt(values['max-depth'] as string | undefined, 'max-depth', 1)
+    const maxPages = parsePositiveInt(values['max-pages'] as string | undefined, 'max-pages', 50)
+    const scoutRequestDelay = parsePositiveInt(
+      values['request-delay'] as string | undefined,
+      'request-delay',
+      200,
+    )
+
+    const result = await runScout(source, {
+      maxDepth,
+      maxPages,
+      browser: (values.browser ?? false) as boolean,
+      requestDelay: scoutRequestDelay,
+      noRobots: (values['no-robots'] ?? false) as boolean,
+      save: values.save as string | undefined,
+      all: (values.all ?? false) as boolean,
+      allowPrivate: (values['allow-private'] ?? false) as boolean,
+    })
+
+    if (jsonMode) {
+      console.log(JSON.stringify(result, null, 2))
+    } else if (result.ok) {
+      const { data } = result
+      console.log(`Scout: ${data.entry}`)
+      console.log(`Found ${data.totalPages} pages:\n`)
+
+      const apiList = data.pages.filter((p) => p.isApi)
+      const otherList = data.pages.filter((p) => !p.isApi)
+
+      if (apiList.length > 0) {
+        console.log(`  API (${apiList.length} pages):`)
+        for (const p of apiList) {
+          console.log(`  [${p.score.toFixed(1)}] ${p.url}  ${p.title}`)
+        }
+      }
+
+      if (otherList.length > 0) {
+        console.log(`\n  Other (${otherList.length} pages):`)
+        for (const p of otherList) {
+          console.log(`  [${p.score.toFixed(1)}] ${p.url}  ${p.title}`)
+        }
+      }
+
+      if (!values.save) {
+        console.log(`\nSuggested next:`)
+        console.log(`  doc2api scout ${source} --save urls.txt`)
+        console.log(`  doc2api inspect urls.txt`)
+      } else {
+        console.log(
+          `\nSaved ${values.all ? data.totalPages : data.apiPages} URLs to ${values.save}`,
+        )
+      }
+    } else {
+      console.log(formatOutput(result, false))
+    }
+
+    process.exit(result.ok ? 0 : 1)
   }
 
   if (command === 'session') {
